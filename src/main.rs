@@ -4,6 +4,11 @@ use colored::*;
 use dialoguer::{theme::ColorfulTheme, Select, Input, Password};
 use git_timetraveler::{create_time_traveled_repo, ProgressCallback, TimeTravelConfig};
 use indicatif::{ProgressBar, ProgressStyle};
+use std::process;
+use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use ctrlc;
 
 /// Create GitHub repositories with backdated commits to show early years in your profile
 #[derive(Parser)]
@@ -89,6 +94,15 @@ impl ProgressCallback for CliProgressBar {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Handle Ctrl+C gracefully
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+    ctrlc::set_handler(move || {
+        println!("\nExiting. Goodbye!");
+        r.store(false, Ordering::SeqCst);
+        process::exit(0);
+    }).expect("Error setting Ctrl-C handler");
+
     // Welcome screen
     println!("{}", r#"
    ____ _ _   _                 _                     _           _           
@@ -114,21 +128,65 @@ async fn main() -> Result<()> {
 
     match selection {
         0 => {
-            // Guided workflow for creating backdated commits (expanded)
-            println!("\nLet's create a backdated commit!\n");
-            let username: String = Input::with_theme(&ColorfulTheme::default())
-                .with_prompt("Enter your GitHub username")
-                .interact_text()?;
-            let token: String = Password::with_theme(&ColorfulTheme::default())
-                .with_prompt("Enter your GitHub token (input hidden)")
-                .interact()?;
-            let repo: String = Input::with_theme(&ColorfulTheme::default())
-                .with_prompt("Enter the repository name")
-                .interact_text()?;
-            let branch: String = Input::with_theme(&ColorfulTheme::default())
-                .with_prompt("Enter the branch name (default: main)")
-                .default("main".to_string())
-                .interact_text()?;
+            // Guided workflow for creating backdated commits (robust)
+            println!("\nLet's create a backdated commit! (Enter 'q' to quit at any prompt)\n");
+            let username: String = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter your GitHub username")
+                    .interact_text()?;
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                if input.trim().is_empty() {
+                    println!("{}", "Username cannot be empty.".red());
+                    continue;
+                }
+                break input;
+            };
+            let token: String = loop {
+                let input: String = Password::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter your GitHub token (input hidden)")
+                    .interact()?;
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                if input.trim().is_empty() {
+                    println!("{}", "Token cannot be empty.".red());
+                    continue;
+                }
+                break input;
+            };
+            let repo: String = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter the repository name")
+                    .interact_text()?;
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                if input.trim().is_empty() {
+                    println!("{}", "Repository name cannot be empty.".red());
+                    continue;
+                }
+                break input;
+            };
+            let branch: String = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter the branch name (default: main)")
+                    .default("main".to_string())
+                    .interact_text()?;
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                if input.trim().is_empty() {
+                    println!("{}", "Branch name cannot be empty.".red());
+                    continue;
+                }
+                break input;
+            };
 
             // Year or range
             let year_mode_items = vec!["Single year", "Range of years"];
@@ -143,7 +201,11 @@ async fn main() -> Result<()> {
                     let input: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the year (e.g., 2000)")
                         .interact_text()?;
-                    match input.parse::<u32>() {
+                    if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                        println!("Exiting. Goodbye!");
+                        process::exit(0);
+                    }
+                    match input.trim().parse::<u32>() {
                         Ok(y) if y >= 1970 && y <= 2100 => break y,
                         _ => println!("{}", "Please enter a valid year between 1970 and 2100.".red()),
                     }
@@ -155,7 +217,11 @@ async fn main() -> Result<()> {
                     let input: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the start year (e.g., 1990)")
                         .interact_text()?;
-                    match input.parse::<u32>() {
+                    if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                        println!("Exiting. Goodbye!");
+                        process::exit(0);
+                    }
+                    match input.trim().parse::<u32>() {
                         Ok(y) if y >= 1970 && y <= 2100 => break y,
                         _ => println!("{}", "Please enter a valid year between 1970 and 2100.".red()),
                     }
@@ -164,11 +230,28 @@ async fn main() -> Result<()> {
                     let input: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the end year (e.g., 1995)")
                         .interact_text()?;
-                    match input.parse::<u32>() {
+                    if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                        println!("Exiting. Goodbye!");
+                        process::exit(0);
+                    }
+                    match input.trim().parse::<u32>() {
                         Ok(y) if y >= start && y <= 2100 => break y,
+                        Ok(y) if y < start => println!("{}", format!("End year must be greater than or equal to start year ({}).", start).red()),
                         _ => println!("{}", format!("Please enter a valid year between {} and 2100.", start).red()),
                     }
                 };
+                let num_years = end - start + 1;
+                if num_years > 10 {
+                    let confirm_bulk = Select::with_theme(&ColorfulTheme::default())
+                        .with_prompt(&format!("You are about to create commits for {} years. Are you sure you want to proceed?", num_years))
+                        .items(&["Yes, proceed", "No, cancel"])
+                        .default(1)
+                        .interact()? == 0;
+                    if !confirm_bulk {
+                        println!("Operation cancelled by user.");
+                        process::exit(0);
+                    }
+                }
                 ( (start..=end).collect(), format!("{}-{}", start, end) )
             };
 
@@ -177,7 +260,11 @@ async fn main() -> Result<()> {
                     .with_prompt("Enter the month (1-12)")
                     .default("1".to_string())
                     .interact_text()?;
-                match input.parse::<u32>() {
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                match input.trim().parse::<u32>() {
                     Ok(m) if m >= 1 && m <= 12 => break m,
                     _ => println!("{}", "Please enter a valid month (1-12).".red()),
                 }
@@ -187,7 +274,11 @@ async fn main() -> Result<()> {
                     .with_prompt("Enter the day (1-31)")
                     .default("1".to_string())
                     .interact_text()?;
-                match input.parse::<u32>() {
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                match input.trim().parse::<u32>() {
                     Ok(d) if d >= 1 && d <= 31 => break d,
                     _ => println!("{}", "Please enter a valid day (1-31).".red()),
                 }
@@ -197,7 +288,11 @@ async fn main() -> Result<()> {
                     .with_prompt("Enter the hour (0-23)")
                     .default("18".to_string())
                     .interact_text()?;
-                match input.parse::<u32>() {
+                if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    println!("Exiting. Goodbye!");
+                    process::exit(0);
+                }
+                match input.trim().parse::<u32>() {
                     Ok(h) if h <= 23 => break h,
                     _ => println!("{}", "Please enter a valid hour (0-23).".red()),
                 }
