@@ -91,14 +91,17 @@ jobs:
       - name: Build binary
         run: cargo build --release
 
-      - name: Prepare binary
+      - name: Prepare binary (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
           mkdir -p release-assets
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp target/release/${{ matrix.binary_name }} release-assets/
-          else
-            cp target/release/${{ matrix.binary_name }} release-assets/
-          fi
+          cp target/release/${{ matrix.binary_name }} release-assets/
+
+      - name: Prepare binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets
+          Copy-Item target/release/${{ matrix.binary_name }} release-assets/
 
       - name: Create archive (Unix)
         if: matrix.os != 'windows-latest'
