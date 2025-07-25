@@ -88,11 +88,11 @@ async function install() {
     
     console.log(`📦 Downloading ${filename}...`);
     
-    const binDir = path.join(__dirname, 'bin');
+    const binaryDir = path.join(__dirname, 'binary');
     const tempDir = path.join(__dirname, 'temp');
     
     // Create directories
-    fs.mkdirSync(binDir, { recursive: true });
+    fs.mkdirSync(binaryDir, { recursive: true });
     fs.mkdirSync(tempDir, { recursive: true });
     
     const archivePath = path.join(tempDir, filename);
@@ -123,8 +123,8 @@ async function install() {
       throw new Error(`Binary ${binaryName} not found in extracted files`);
     }
     
-    // Move binary to bin directory
-    const finalBinaryPath = path.join(binDir, binaryName);
+    // Move binary to binary directory
+    const finalBinaryPath = path.join(binaryDir, binaryName);
     fs.copyFileSync(binaryPath, finalBinaryPath);
     
     // Make executable on Unix-like systems
