@@ -27,6 +27,12 @@
     <img src="https://img.shields.io/badge/Linux-Supported-FCC624?style=flat-square&logo=linux&logoColor=E0E0E0&color=2A2A2A" alt="Linux Badge">
     <img src="https://img.shields.io/badge/npm-Installer-CB3837?style=flat-square&logo=npm&logoColor=E0E0E0&color=383838" alt="NPM Installer Badge">
   </p>
+  
+  <p>
+    <a href="https://www.npmjs.com/package/git-timetraveler">
+      <img src="https://img.shields.io/npm/v/git-timetraveler?style=for-the-badge&logo=npm" alt="npm version">
+    </a>
+  </p>
 </div>
 
 A modern, cross-platform rewrite of the original [1990-script](https://github.com/antfu/1990-script) in **Rust**, designed to create GitHub repositories with backdated commits. Enhance your contribution graph by showing activity in earlier years.
@@ -44,6 +50,8 @@ A modern, cross-platform rewrite of the original [1990-script](https://github.co
 ---
 
 ### Installation & Usage
+
+> **Note:** The npm package is published on [npmjs.com](https://www.npmjs.com/package/git-timetraveler). GitHub Packages and npmjs.com are separate registries; only packages published to GitHub Packages appear in the GitHub "Packages" tab.
 
 #### Recommended: `npx`
 The easiest way to run the tool without a manual installation.

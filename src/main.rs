@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use colored::*;
-use dialoguer::{Input, Password};
+use dialoguer::{theme::ColorfulTheme, Select, Input, Password};
 use git_timetraveler::{create_time_traveled_repo, ProgressCallback, TimeTravelConfig};
 use indicatif::{ProgressBar, ProgressStyle};
 
@@ -50,6 +50,10 @@ struct Args {
     /// Skip confirmation prompts
     #[arg(short = 'y', long)]
     yes: bool,
+
+    /// Force push (overwrite remote branch, use with caution)
+    #[arg(long, default_value_t = false)]
+    force: bool,
 }
 
 struct CliProgressBar {
@@ -85,79 +89,163 @@ impl ProgressCallback for CliProgressBar {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    // Welcome screen
+    println!("{}", r#"
+   ____ _ _   _                 _                     _           _           
+  / ___(_) |_| |_ ___ _ __ __ _| |_ ___  ___ ___   __| | ___  ___| |_ ___ _ __ 
+ | |  _| | __| __/ _ \ '__/ _` | __/ _ \/ __/ __| / _` |/ _ \/ __| __/ _ \ '__|
+ | |_| | | |_| ||  __/ | | (_| | ||  __/\__ \__ \| (_| |  __/ (__| ||  __/ |   
+  \____|_|\__|\__\___|_|  \__,_|\__\___||___/___(_)__,_|\___|\___|\__\___|_|   
+    "#.bright_blue().bold());
+    println!("{}", "Welcome to Git Time Traveler!\n".cyan().bold());
+    println!("Travel back in time on your GitHub profile with ease!\n".cyan());
 
-    println!("{}", "🚀 Git Time Traveler".bright_blue().bold());
-    println!("{}", "Travel back in time on your GitHub profile!".cyan());
-    println!();
+    let menu_items = vec![
+        "Create backdated commit(s)",
+        "View usage examples",
+        "Learn about GitHub tokens",
+        "Exit",
+    ];
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("What would you like to do?")
+        .items(&menu_items)
+        .default(0)
+        .interact()?;
 
-    // Get username and token (from args or prompt) - clone to avoid partial move
-    let username = get_username(args.username.clone())?;
-    let token = get_token(args.token.clone())?;
+    match selection {
+        0 => {
+            // Guided workflow for creating backdated commits (expanded)
+            println!("\nLet's create a backdated commit!\n");
+            let username: String = Input::with_theme(&ColorfulTheme::default())
+                .with_prompt("Enter your GitHub username")
+                .interact_text()?;
+            let token: String = Password::with_theme(&ColorfulTheme::default())
+                .with_prompt("Enter your GitHub token (input hidden)")
+                .interact()?;
+            let repo: String = Input::with_theme(&ColorfulTheme::default())
+                .with_prompt("Enter the repository name")
+                .interact_text()?;
+            let branch: String = Input::with_theme(&ColorfulTheme::default())
+                .with_prompt("Enter the branch name (default: main)")
+                .default("main".to_string())
+                .interact_text()?;
 
-    // Parse years range if provided
-    let years: Vec<u32> = if let Some(ref range) = args.years {
-        let parts: Vec<&str> = range.split('-').collect();
-        if parts.len() == 2 {
-            let start: u32 = parts[0].parse().expect("Invalid start year");
-            let end: u32 = parts[1].parse().expect("Invalid end year");
-            (start..=end).collect()
-        } else if parts.len() == 1 {
-            vec![parts[0].parse().expect("Invalid year")] 
-        } else {
-            panic!("Invalid years format. Use e.g. 1990-2001");
+            // Year or range
+            let year_mode_items = vec!["Single year", "Range of years"];
+            let year_mode = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt("Would you like to enter a single year or a range?")
+                .items(&year_mode_items)
+                .default(0)
+                .interact()?;
+            let (years, years_str) = if year_mode == 0 {
+                // Single year
+                let year: u32 = loop {
+                    let input: String = Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Enter the year (e.g., 2000)")
+                        .interact_text()?;
+                    match input.parse::<u32>() {
+                        Ok(y) if y >= 1970 && y <= 2100 => break y,
+                        _ => println!("{}", "Please enter a valid year between 1970 and 2100.".red()),
+                    }
+                };
+                (vec![year], year.to_string())
+            } else {
+                // Range
+                let start: u32 = loop {
+                    let input: String = Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Enter the start year (e.g., 1990)")
+                        .interact_text()?;
+                    match input.parse::<u32>() {
+                        Ok(y) if y >= 1970 && y <= 2100 => break y,
+                        _ => println!("{}", "Please enter a valid year between 1970 and 2100.".red()),
+                    }
+                };
+                let end: u32 = loop {
+                    let input: String = Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Enter the end year (e.g., 1995)")
+                        .interact_text()?;
+                    match input.parse::<u32>() {
+                        Ok(y) if y >= start && y <= 2100 => break y,
+                        _ => println!("{}", format!("Please enter a valid year between {} and 2100.", start).red()),
+                    }
+                };
+                ( (start..=end).collect(), format!("{}-{}", start, end) )
+            };
+
+            let month: u32 = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter the month (1-12)")
+                    .default("1".to_string())
+                    .interact_text()?;
+                match input.parse::<u32>() {
+                    Ok(m) if m >= 1 && m <= 12 => break m,
+                    _ => println!("{}", "Please enter a valid month (1-12).".red()),
+                }
+            };
+            let day: u32 = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter the day (1-31)")
+                    .default("1".to_string())
+                    .interact_text()?;
+                match input.parse::<u32>() {
+                    Ok(d) if d >= 1 && d <= 31 => break d,
+                    _ => println!("{}", "Please enter a valid day (1-31).".red()),
+                }
+            };
+            let hour: u32 = loop {
+                let input: String = Input::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter the hour (0-23)")
+                    .default("18".to_string())
+                    .interact_text()?;
+                match input.parse::<u32>() {
+                    Ok(h) if h <= 23 => break h,
+                    _ => println!("{}", "Please enter a valid hour (0-23).".red()),
+                }
+            };
+
+            // Force push
+            let force_items = vec!["No (safe, recommended)", "Yes (force push, overwrite history)"];
+            let force = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt("Do you want to force push? (use with caution)")
+                .items(&force_items)
+                .default(0)
+                .interact()? == 1;
+
+            // Summary and confirmation
+            println!("\nSummary:");
+            println!("- Username: {}", username.bright_green());
+            println!("- Repo: {}", repo.bright_yellow());
+            println!("- Branch: {}", branch.bright_cyan());
+            println!("- Years: {}", years_str.bright_magenta());
+            println!("- Date: {:02}-{:02} at {:02}:00", month, day, hour);
+            println!("- Force push: {}", if force { "Yes".red() } else { "No".green() });
+
+            let confirm_items = vec!["Proceed", "Cancel"];
+            let confirm = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt("Do you want to proceed?")
+                .items(&confirm_items)
+                .default(0)
+                .interact()? == 0;
+            if !confirm {
+                println!("{}", "Operation cancelled by user.".yellow());
+                return Ok(());
+            }
+
+            // (Stub) Call the actual commit logic here
+            println!("\n(Stub) This is where the time travel commit logic would run.\n");
         }
-    } else {
-        vec![args.year]
-    };
-
-    // Confirmation
-    if !args.yes {
-        let years_str = if years.len() > 1 {
-            format!("{}-{}", years.first().unwrap(), years.last().unwrap())
-        } else {
-            years[0].to_string()
-        };
-        let confirm = dialoguer::Confirm::new()
-            .with_prompt(&format!("Do you want to proceed with years: {}?", years_str))
-            .default(true)
-            .interact()?;
-        if !confirm {
-            println!("{}", "Operation cancelled.".yellow());
+        1 => {
+            println!("\nUsage examples will be shown here. (Stub)\n");
+        }
+        2 => {
+            println!("\nLearn about GitHub tokens will be shown here. (Stub)\n");
+        }
+        3 => {
+            println!("\nGoodbye!\n");
             return Ok(());
         }
+        _ => unreachable!(),
     }
-
-    for year in years {
-        // Create and validate configuration
-        let config = TimeTravelConfig::new(
-            year,
-            args.month,
-            args.day,
-            args.hour,
-            username.clone(),
-            token.clone(),
-            args.repo.clone(),
-            args.branch.clone(),
-        )?;
-
-        // Show summary
-        println!("\n📅 Target date: {}", config.formatted_date());
-        println!("👤 GitHub user: {}", username.bright_green());
-        println!("📦 Repository: {}", config.repo_name().bright_yellow());
-        println!();
-
-        // Create progress bar
-        let progress = CliProgressBar::new();
-
-        // Execute the time travel
-        create_time_traveled_repo(&config, Some(&progress)).await?;
-    }
-
-    println!();
-    println!("{}", "🎉 Success!".bright_green().bold());
-    println!("Check your profile: {}", 
-             format!("https://github.com/{}", username).bright_blue().underline());
 
     Ok(())
 }
