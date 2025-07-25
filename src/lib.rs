@@ -5,6 +5,14 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::TempDir;
 
+pub mod git_context;
+pub mod session;
+pub mod defaults;
+
+pub use git_context::{GitContext, GitContextDetector, GitIdentity, GitRemote};
+pub use session::{SessionManager, SessionData, SessionSuggestions, SessionStats, UserPreferences, RecentContext};
+pub use defaults::{DefaultsEngine, IntelligentDefaults, AuthorMode, ContextAnalysis, DetectedPattern};
+
 /// Configuration for creating a time-traveled repository
 #[derive(Debug, Clone)]
 pub struct TimeTravelConfig {
