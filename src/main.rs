@@ -128,6 +128,7 @@ If this is a bug, please report it at https://github.com/chama-x/Git-Timetravele
         "Learn about GitHub tokens",
         "Exit",
     ];
+    println!("[DEBUG] main menu items: {:?}, default: 0", menu_items);
     assert!(!menu_items.is_empty(), "Menu items list must not be empty");
     assert!(0 < menu_items.len(), "Default index for menu must be valid");
     let selection = Select::with_theme(&ColorfulTheme::default())
@@ -200,6 +201,7 @@ If this is a bug, please report it at https://github.com/chama-x/Git-Timetravele
 
             // Year or range
             let year_mode_items = vec!["Single year", "Range of years"];
+            println!("[DEBUG] year_mode_items: {:?}, default: 0", year_mode_items);
             assert!(!year_mode_items.is_empty(), "Year mode items list must not be empty");
             assert!(0 < year_mode_items.len(), "Default index for year mode must be valid");
             let year_mode = Select::with_theme(&ColorfulTheme::default())
@@ -264,6 +266,7 @@ If this is a bug, please report it at https://github.com/chama-x/Git-Timetravele
                 let num_years = end - start + 1;
                 if num_years > 10 {
                     let bulk_items = ["Yes, proceed", "No, cancel"];
+                    println!("[DEBUG] bulk_items: {:?}, default: 1", bulk_items);
                     assert!(!bulk_items.is_empty(), "Bulk confirm items list must not be empty");
                     assert!(1 < bulk_items.len(), "Default index for bulk confirm must be valid");
                     let confirm_bulk = Select::with_theme(&ColorfulTheme::default())
@@ -324,6 +327,7 @@ If this is a bug, please report it at https://github.com/chama-x/Git-Timetravele
 
             // Force push
             let force_items = vec!["No (safe, recommended)", "Yes (force push, overwrite history)"];
+            println!("[DEBUG] force_items: {:?}, default: 0", force_items);
             assert!(!force_items.is_empty(), "Force items list must not be empty");
             assert!(0 < force_items.len(), "Default index for force must be valid");
             let force = Select::with_theme(&ColorfulTheme::default())
@@ -342,6 +346,7 @@ If this is a bug, please report it at https://github.com/chama-x/Git-Timetravele
             println!("- Force push: {}", if force { "Yes".red() } else { "No".green() });
 
             let confirm_items = vec!["Proceed", "Cancel"];
+            println!("[DEBUG] confirm_items: {:?}, default: 0", confirm_items);
             assert!(!confirm_items.is_empty(), "Confirm items list must not be empty");
             assert!(0 < confirm_items.len(), "Default index for confirm must be valid");
             let confirm = Select::with_theme(&ColorfulTheme::default())
