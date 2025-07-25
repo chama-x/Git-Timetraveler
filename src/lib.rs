@@ -14,6 +14,7 @@ pub struct TimeTravelConfig {
     pub hour: u32,
     pub username: String,
     pub token: String,
+    pub repo_name: Option<String>,
 }
 
 impl TimeTravelConfig {
@@ -25,6 +26,7 @@ impl TimeTravelConfig {
         hour: u32,
         username: String,
         token: String,
+        repo_name: Option<String>,
     ) -> Result<Self> {
         // Validate year (reasonable range)
         if year < 1970 || year > 2030 {
@@ -63,12 +65,17 @@ impl TimeTravelConfig {
             hour,
             username,
             token,
+            repo_name,
         })
     }
 
-    /// Get the repository name (same as year)
+    /// Get the repository name (custom or year)
     pub fn repo_name(&self) -> String {
-        self.year.to_string()
+        if let Some(ref name) = self.repo_name {
+            name.clone()
+        } else {
+            self.year.to_string()
+        }
     }
 
     /// Get the commit timestamp as an ISO 8601 string
@@ -223,7 +230,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 1, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         );
         assert!(config.is_ok());
 
@@ -231,7 +239,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1969, 1, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         );
         assert!(config.is_err());
 
@@ -239,7 +248,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 13, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         );
         assert!(config.is_err());
 
@@ -247,7 +257,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 1, 1, 18,
             "".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         );
         assert!(config.is_err());
     }
@@ -257,7 +268,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 1, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         ).unwrap();
 
         let timestamp = config.commit_timestamp().unwrap();
@@ -269,7 +281,8 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 1, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         ).unwrap();
 
         assert_eq!(config.formatted_date(), "1990-01-01 at 18:00:00");
@@ -280,9 +293,10 @@ mod tests {
         let config = TimeTravelConfig::new(
             1990, 1, 1, 18,
             "testuser".to_string(),
-            "token123".to_string()
+            "token123".to_string(),
+            Some("testrepo".to_string())
         ).unwrap();
 
-        assert_eq!(config.repo_name(), "1990");
+        assert_eq!(config.repo_name(), "testrepo");
     }
 } 

@@ -50,7 +50,15 @@ The easiest way to run the tool without a manual installation.
 
 ```bash
 npx git-timetraveler --year 1990
-````
+```
+
+You can also specify a custom repository name using the `--repo` flag:
+
+```bash
+npx git-timetraveler --year 1990 --repo Git-Timetraveler
+```
+
+If `--repo` is not provided, the repository name defaults to the year.
 
 #### Manual Installation
 

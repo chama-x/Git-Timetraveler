@@ -35,6 +35,10 @@ struct Args {
     #[arg(long, default_value = "18")]
     hour: u32,
 
+    /// Custom repository name (defaults to year)
+    #[arg(long)]
+    repo: Option<String>,
+
     /// Skip confirmation prompts
     #[arg(short = 'y', long)]
     yes: bool,
@@ -91,6 +95,7 @@ async fn main() -> Result<()> {
         args.hour,
         username.clone(),
         token,
+        args.repo.clone(),
     )?;
 
     // Show summary
