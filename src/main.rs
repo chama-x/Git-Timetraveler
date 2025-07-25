@@ -61,6 +61,10 @@ struct Args {
     /// Force push (overwrite remote branch, use with caution)
     #[arg(long, default_value_t = false)]
     force: bool,
+
+    /// Run in non-interactive mode (no menu, use only CLI args)
+    #[arg(long, default_value_t = false)]
+    no_menu: bool,
 }
 
 struct CliProgressBar {
@@ -98,16 +102,34 @@ impl ProgressCallback for CliProgressBar {
 async fn main() -> Result<()> {
     // TTY check for interactive menu
     if !atty::is(Stream::Stdout) || !atty::is(Stream::Stdin) {
-        eprintln!("\n❌ This CLI requires an interactive terminal (TTY).\nPlease run in a supported terminal (e.g., bash, zsh, Terminal.app, iTerm2).\nIf you are using npx or a non-interactive shell, try running directly with 'cargo run' or 'npm run'.");
+        eprintln!("\n❌ This CLI requires an interactive terminal (TTY).\nIf you are using npx or a non-interactive shell, try running with the --no-menu flag and provide all required arguments.\nExample: npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year> ...");
         std::process::exit(1);
     }
 
     // Set a panic hook for user-friendly error reporting
     panic::set_hook(Box::new(|info| {
-        eprintln!("\n❌ An unexpected error occurred: {}
-If this is a bug, please report it at https://github.com/chama-x/Git-Timetraveler/issues", info);
+        eprintln!("\n❌ An unexpected error occurred: {}\nIf this is a bug, please report it at https://github.com/chama-x/Git-Timetraveler/issues", info);
         std::process::exit(1);
     }));
+
+    let args = Args::parse();
+    if args.no_menu {
+        // Non-interactive mode: require all necessary arguments
+        let missing = [
+            (args.username.is_none(), "--username"),
+            (args.token.is_none(), "--token"),
+            (args.repo.is_none(), "--repo"),
+        ].iter().filter(|(cond,_)| *cond).map(|(_,name)| *name).collect::<Vec<_>>();
+        if !missing.is_empty() {
+            eprintln!("❌ Missing required arguments for --no-menu: {}", missing.join(", "));
+            eprintln!("Example: npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year> ...");
+            std::process::exit(1);
+        }
+        // (Stub) Call the actual commit logic here using args
+        println!("\n(Stub) Running in non-interactive mode with provided arguments.\n");
+        // TODO: Call create_time_traveled_repo with parsed args
+        return Ok(());
+    }
 
     // Handle Ctrl+C gracefully
     let running = Arc::new(AtomicBool::new(true));
