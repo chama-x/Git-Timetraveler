@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 
-console.log('[DEBUG] Starting git-timetraveler wrapper');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
 // Path to the actual binary
 const binaryPath = path.join(__dirname, '..', 'binary', 'git-timetraveler');
-console.log('[DEBUG] Binary path:', binaryPath);
 
 // Check if binary exists
 if (!fs.existsSync(binaryPath)) {
-  console.error('[DEBUG] Binary not found at', binaryPath);
   console.error('❌ Git Time Traveler binary not found!');
   console.error('');
   console.error('This usually means the installation failed.');
@@ -22,7 +19,6 @@ if (!fs.existsSync(binaryPath)) {
   console.error('  https://github.com/chama-x/Git-Timetraveler/issues');
   process.exit(1);
 }
-console.log('[DEBUG] Binary exists, spawning process...');
 
 // Forward all arguments and stdio to the binary
 const child = spawn(binaryPath, process.argv.slice(2), {
@@ -31,13 +27,11 @@ const child = spawn(binaryPath, process.argv.slice(2), {
 
 // Forward exit code
 child.on('close', (code) => {
-  console.log('[DEBUG] Child process closed with code', code);
   process.exit(code || 0);
 });
 
 // Handle errors
 child.on('error', (err) => {
-  console.error('[DEBUG] Failed to execute git-timetraveler:', err);
   console.error('❌ Failed to execute git-timetraveler:', err.message);
   process.exit(1);
 }); 

@@ -58,7 +58,15 @@ You can also specify a custom repository name using the `--repo` flag:
 npx git-timetraveler --year 1990 --repo Git-Timetraveler
 ```
 
+To create commits for a range of years, use the `--years` flag:
+
+```bash
+npx git-timetraveler --years 1990-2001 --repo Git-Timetraveler
+```
+
 If `--repo` is not provided, the repository name defaults to the year.
+
+- `--year` and `--years` are mutually exclusive. Use only one at a time.
 
 #### Manual Installation
 

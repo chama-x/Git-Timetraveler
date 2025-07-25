@@ -15,6 +15,7 @@ pub struct TimeTravelConfig {
     pub username: String,
     pub token: String,
     pub repo_name: Option<String>,
+    pub branch: String,
 }
 
 impl TimeTravelConfig {
@@ -27,6 +28,7 @@ impl TimeTravelConfig {
         username: String,
         token: String,
         repo_name: Option<String>,
+        branch: String,
     ) -> Result<Self> {
         // Validate year (reasonable range)
         if year < 1970 || year > 2030 {
@@ -66,6 +68,7 @@ impl TimeTravelConfig {
             username,
             token,
             repo_name,
+            branch,
         })
     }
 
@@ -151,7 +154,7 @@ pub async fn create_time_traveled_repo(
     )?;
 
     report_progress("Pushing to GitHub...");
-    push_to_github(&repo_path, &config.username, &config.token, &config.repo_name()).await?;
+    push_to_github(&repo_path, &config.username, &config.token, &config.repo_name(), &config.branch).await?;
 
     if let Some(p) = progress {
         p.finish("✅ Time travel complete!");
@@ -205,17 +208,18 @@ async fn push_to_github(
     username: &str,
     token: &str,
     repo_name: &str,
+    branch: &str,
 ) -> Result<()> {
     let remote_url = format!("https://{}@github.com/{}/{}.git", token, username, repo_name);
     
     // Add remote origin
     run_git_command(repo_path, &["remote", "add", "origin", &remote_url])?;
     
-    // Set main branch
-    run_git_command(repo_path, &["branch", "-M", "main"])?;
+    // Set branch to config.branch
+    run_git_command(repo_path, &["branch", "-M", branch])?;
     
     // Push to origin
-    run_git_command(repo_path, &["push", "-u", "origin", "main", "--force"])?;
+    run_git_command(repo_path, &["push", "-u", "origin", branch, "--force"])?;
 
     Ok(())
 }
@@ -231,7 +235,8 @@ mod tests {
             1990, 1, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         );
         assert!(config.is_ok());
 
@@ -240,7 +245,8 @@ mod tests {
             1969, 1, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         );
         assert!(config.is_err());
 
@@ -249,7 +255,8 @@ mod tests {
             1990, 13, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         );
         assert!(config.is_err());
 
@@ -258,7 +265,8 @@ mod tests {
             1990, 1, 1, 18,
             "".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         );
         assert!(config.is_err());
     }
@@ -269,7 +277,8 @@ mod tests {
             1990, 1, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         ).unwrap();
 
         let timestamp = config.commit_timestamp().unwrap();
@@ -282,7 +291,8 @@ mod tests {
             1990, 1, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         ).unwrap();
 
         assert_eq!(config.formatted_date(), "1990-01-01 at 18:00:00");
@@ -294,7 +304,8 @@ mod tests {
             1990, 1, 1, 18,
             "testuser".to_string(),
             "token123".to_string(),
-            Some("testrepo".to_string())
+            Some("testrepo".to_string()),
+            "testbranch".to_string()
         ).unwrap();
 
         assert_eq!(config.repo_name(), "testrepo");

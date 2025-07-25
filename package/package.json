@@ -1,6 +1,6 @@
 {
   "name": "git-timetraveler",
-  "version": "0.1.8",
+  "version": "0.1.1",
   "description": "Create GitHub repositories with backdated commits to show early years in your profile",
   "keywords": [
     "git",
@@ -26,7 +26,9 @@
     "install.js",
     "README.md"
   ],
-  "scripts": {},
+  "scripts": {
+    "postinstall": "node install.js"
+  },
   "engines": {
     "node": ">=14"
   },
@@ -39,4 +41,4 @@
     "x64",
     "arm64"
   ]
-}
+} 
