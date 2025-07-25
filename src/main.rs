@@ -98,7 +98,7 @@ async fn main() -> Result<()> {
   \____|_|\__|\__\___|_|  \__,_|\__\___||___/___(_)__,_|\___|\___|\__\___|_|   
     "#.bright_blue().bold());
     println!("{}", "Welcome to Git Time Traveler!\n".cyan().bold());
-    println!("Travel back in time on your GitHub profile with ease!\n".cyan());
+    println!("{}", "Travel back in time on your GitHub profile with ease!\n".cyan());
 
     let menu_items = vec![
         "Create backdated commit(s)",
