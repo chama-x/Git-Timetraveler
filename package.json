@@ -1,0 +1,6 @@
+{
+  "name": "git-timetraveler",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+} 
