@@ -6,33 +6,22 @@ permissions:
 on:
   push:
     tags:
-      - v[0-9]+.*
+      - 'v*'
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     outputs:
-      has-releases: ${{ steps.create-release.outputs.has-releases }}
-      release-version: ${{ steps.create-release.outputs.release-version }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/latest/download/installer.sh | sh"
-      - id: create-release
-        run: |
-          cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
-          echo "has-releases=$(jq --raw-output ".has_releases" dist-manifest.json)" >> $GITHUB_OUTPUT
-          echo "release-version=$(jq --raw-output ".announcement_tag_is_implicit" dist-manifest.json)" >> $GITHUB_OUTPUT
       - name: Create Release
-        uses: ncipollo/release-action@v1
-        if: ${{ steps.create-release.outputs.has-releases == 'true' }}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
           body: |
             ## What's Changed
             
@@ -58,39 +47,65 @@ jobs:
           draft: false
           prerelease: false
 
-  upload-artifacts:
+  build-and-upload:
     needs: create-release
-    if: ${{ needs.create-release.outputs.has-releases == 'true' }}
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            name: git-timetraveler-x86_64-unknown-linux-gnu.tar.xz
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            name: git-timetraveler-x86_64-pc-windows-msvc.zip
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            name: git-timetraveler-x86_64-apple-darwin.tar.xz
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            name: git-timetraveler-aarch64-apple-darwin.tar.xz
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: git-timetraveler
+            asset_name: git-timetraveler-x86_64-unknown-linux-gnu.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: git-timetraveler.exe
+            asset_name: git-timetraveler-x86_64-pc-windows-msvc.zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary_name: git-timetraveler
+            asset_name: git-timetraveler-x86_64-apple-darwin.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: git-timetraveler
+            asset_name: git-timetraveler-aarch64-apple-darwin.tar.gz
 
     runs-on: ${{ matrix.os }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
-          submodules: recursive
-      - name: Install cargo-dist
-        run: "curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/latest/download/installer.sh | sh"
-      - name: Build artifacts
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Create archive (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
-          # Actually do a full build
-          cargo dist build --tag=${{ github.ref_name }} --target=${{ matrix.target }} --output-format=json --manifest-path=Cargo.toml
-      - name: Upload artifacts
+          cd target/${{ matrix.target }}/release
+          tar -czf ../../../${{ matrix.asset_name }} ${{ matrix.binary_name }}
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
-          # Upload the artifacts
-          cargo dist upload --tag=${{ github.ref_name }} 
+          cd target/${{ matrix.target }}/release
+          7z a ../../../${{ matrix.asset_name }} ${{ matrix.binary_name }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream 

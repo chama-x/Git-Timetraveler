@@ -24,10 +24,10 @@ function getPlatformInfo() {
     } else {
       target = 'x86_64-apple-darwin';
     }
-    extension = '.tar.xz';
+    extension = '.tar.gz';
   } else if (platform === 'linux') {
     target = 'x86_64-unknown-linux-gnu';
-    extension = '.tar.xz';
+    extension = '.tar.gz';
   } else {
     throw new Error(`Unsupported platform: ${platform}-${arch}`);
   }
@@ -72,8 +72,8 @@ function extractArchive(archivePath, extractDir) {
     // Use PowerShell to extract zip on Windows
     execSync(`powershell -command "Expand-Archive -Path '${archivePath}' -DestinationPath '${extractDir}' -Force"`, { stdio: 'inherit' });
   } else {
-    // Use tar for .tar.xz files on Unix-like systems
-    execSync(`tar -xf "${archivePath}" -C "${extractDir}"`, { stdio: 'inherit' });
+    // Use tar for .tar.gz files on Unix-like systems
+    execSync(`tar -xzf "${archivePath}" -C "${extractDir}"`, { stdio: 'inherit' });
   }
 }
 
