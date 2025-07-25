@@ -1,1 +1,12 @@
 /target
+.kirouge
+.venv
+.DS_Store
+.idea
+.vscode
+
+# Security - never commit credentials
+.git-credentials*
+*.token
+*.key
+.env.local
