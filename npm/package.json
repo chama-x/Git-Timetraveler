@@ -1,6 +1,6 @@
 {
-  "name": "@chama-x/git-timetraveler",
-  "version": "0.1.14",
+  "name": "git-timetraveler",
+  "version": "0.1.15",
   "description": "Create GitHub repositories with backdated commits to show early years in your profile",
   "keywords": [
     "git",
@@ -43,6 +43,6 @@
     "url": "https://github.com/chama-x/Git-Timetraveler/issues"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   }
 }
