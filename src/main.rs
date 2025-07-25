@@ -125,9 +125,40 @@ async fn main() -> Result<()> {
             eprintln!("Example: npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year> ...");
             std::process::exit(1);
         }
-        // (Stub) Call the actual commit logic here using args
-        println!("\n(Stub) Running in non-interactive mode with provided arguments.\n");
-        // TODO: Call create_time_traveled_repo with parsed args
+        // Parse years (single or range)
+        let years: Vec<u32> = if let Some(ref years_str) = args.years {
+            let parts: Vec<&str> = years_str.split('-').collect();
+            if parts.len() == 2 {
+                let start = parts[0].parse::<u32>().unwrap_or(args.year);
+                let end = parts[1].parse::<u32>().unwrap_or(args.year);
+                (start..=end).collect()
+            } else {
+                vec![args.year]
+            }
+        } else {
+            vec![args.year]
+        };
+        // Progress bar stub (can be improved)
+        println!("\nCreating backdated commit(s) for years: {:?}\n", years);
+        for year in years {
+            let config = TimeTravelConfig::new(
+                args.username.clone().unwrap(),
+                args.token.clone().unwrap(),
+                year,
+                args.month,
+                args.day,
+                args.hour,
+                Some(args.repo.clone().unwrap()),
+                args.branch.clone(),
+            )?;
+            // Call the actual commit logic
+            if let Err(e) = create_time_traveled_repo(&config, args.force, None) {
+                eprintln!("❌ Error for year {}: {}", year, e);
+                std::process::exit(1);
+            }
+            println!("✅ Commit for year {} created.", year);
+        }
+        println!("\nAll done!\n");
         return Ok(());
     }
 

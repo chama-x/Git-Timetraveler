@@ -118,3 +118,49 @@ GitHub's contribution graph renders commits based on the *author date*, which is
 <div align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&height=120&reversal=true&color=0:1A1A1A,50:2A2A2A,100:383838&animation=fadeIn&section=footer" alt="Minimal Footer">
 </div>
+
+## Usage
+
+### Interactive Menu (Recommended for Local Terminals)
+
+Run the CLI in a supported terminal (e.g., bash, zsh, Terminal.app, iTerm2) to use the beginner-friendly interactive menu:
+
+```sh
+npx git-timetraveler
+```
+
+You will be guided through all required options with prompts and validation.
+
+---
+
+### Non-Interactive Mode (For npx, CI, or Scripts)
+
+If you are running in a non-interactive environment (e.g., npx, CI, or a script), use the `--no-menu` flag and provide all required arguments:
+
+```sh
+npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year>
+```
+
+Or for a range of years:
+
+```sh
+npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --years 2000-2005
+```
+
+**Required arguments for --no-menu:**
+- `--username` (GitHub username)
+- `--token` (GitHub personal access token)
+- `--repo` (Repository name)
+- `--year` or `--years` (Year or range)
+
+Other options:
+- `--branch` (target branch, default: main)
+- `--month`, `--day`, `--hour`, `--force`, etc.
+
+If any required argument is missing, the CLI will print an error and exit.
+
+---
+
+**Note:**
+- The interactive menu requires a real TTY. If you see a panic or error about `min <= max` or TTY, use `--no-menu` mode.
+- For automation, always use `--no-menu` and supply all arguments.
