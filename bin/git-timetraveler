@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const { spawn } = require('child_process');
+const fs = require('fs');
+
+// Path to the actual binary
+const binaryPath = path.join(__dirname, '..', 'binary', 'git-timetraveler');
+
+// Check if binary exists
+if (!fs.existsSync(binaryPath)) {
+  console.error('❌ Git Time Traveler binary not found!');
+  console.error('Please ensure you have built the binary and placed it in the correct directory.');
+  process.exit(1);
+}
+
+// Forward all arguments and stdio to the binary
+const child = spawn(binaryPath, process.argv.slice(2), {
+  stdio: 'inherit'
+});
+
+// Forward exit code
+child.on('close', (code) => {
+  process.exit(code || 0);
+});
+
+// Handle errors
+child.on('error', (err) => {
+  console.error('❌ Failed to execute git-timetraveler:', err.message);
+  process.exit(1);
+}); 

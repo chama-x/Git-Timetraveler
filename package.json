@@ -1,6 +1,48 @@
 {
   "name": "git-timetraveler",
+  "version": "0.1.15",
+  "description": "Create GitHub repositories with backdated commits to show early years in your profile",
+  "keywords": [
+    "git",
+    "github",
+    "cli",
+    "time-travel",
+    "profile",
+    "rust"
+  ],
+  "homepage": "https://github.com/chama-x/Git-Timetraveler#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chama-x/Git-Timetraveler.git"
+  },
+  "license": "MIT",
+  "author": "chama-x <chama-x@users.noreply.github.com>",
+  "bin": {
+    "git-timetraveler": "./bin/git-timetraveler"
+  },
+  "files": [
+    "bin/",
+    "binary/",
+    "install.js",
+    "README.md"
+  ],
+  "scripts": {},
+  "engines": {
+    "node": ">=14"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "bugs": {
+    "url": "https://github.com/chama-x/Git-Timetraveler/issues"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   }
-} 
+}
