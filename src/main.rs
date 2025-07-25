@@ -427,8 +427,27 @@ async fn main() -> Result<()> {
                 return Ok(());
             }
 
-            // (Stub) Call the actual commit logic here
-            println!("\n(Stub) This is where the time travel commit logic would run.\n");
+            let years_vec = years.clone();
+            println!("\nCreating backdated commit(s) for years: {:?}\n", years_vec);
+            for year in years_vec {
+                let config = TimeTravelConfig::new(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    username.clone(),
+                    token.clone(),
+                    Some(repo.clone()),
+                    branch.clone(),
+                )?;
+                // Call the actual commit logic
+                if let Err(e) = create_time_traveled_repo(&config, None, force).await {
+                    eprintln!("❌ Error for year {}: {}", year, e);
+                    std::process::exit(1);
+                }
+                println!("✅ Commit for year {} created.", year);
+            }
+            println!("\nAll done!\n");
         }
         1 => {
             println!("\nUsage examples will be shown here. (Stub)\n");
