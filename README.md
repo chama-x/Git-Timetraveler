@@ -49,7 +49,7 @@ A modern, cross-platform rewrite of the original [1990-script](https://github.co
 The easiest way to run the tool without a manual installation.
 
 ```bash
-npx @chamax/git-timetraveler --year 1990
+npx git-timetraveler --year 1990
 ````
 
 #### Manual Installation

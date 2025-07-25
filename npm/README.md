@@ -1,4 +1,4 @@
-# @chamax/git-timetraveler
+# git-timetraveler
 
 > 🚀 Travel back in time on your GitHub profile!
 
@@ -8,10 +8,10 @@ This npm package provides easy installation of the [Git Time Traveler](https://g
 
 ```bash
 # Run directly with npx (recommended)
-npx @chamax/git-timetraveler --year 1990
+npx git-timetraveler --year 1990
 
 # Or install globally
-npm install -g @chamax/git-timetraveler
+npm install -g git-timetraveler
 git-timetraveler --year 1990
 ```
 
@@ -31,16 +31,16 @@ Creates GitHub repositories with backdated commits to show early years in your c
 
 ```bash
 # Interactive mode
-npx @chamax/git-timetraveler
+npx git-timetraveler
 
 # Custom date and time
-npx @chamax/git-timetraveler --year 1985 --month 10 --day 26 --hour 9
+npx git-timetraveler --year 1985 --month 10 --day 26 --hour 9
 
 # Non-interactive mode
-npx @chamax/git-timetraveler --username johndoe --token ghp_xxxx --year 1990 --yes
+npx git-timetraveler --username johndoe --token ghp_xxxx --year 1990 --yes
 
 # Get help
-npx @chamax/git-timetraveler --help
+npx git-timetraveler --help
 ```
 
 ## Installation
