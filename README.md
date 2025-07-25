@@ -1,195 +1,96 @@
-# 🚀 Git Time Traveler
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=220&text=Git%20Time%20Traveler&color=0:2A2A2A,100:1A1A1A&fontColor=E0E0E0&fontSize=70&animation=fadeIn&fontAlignY=40&desc=Travel%20back%20in%20time%20on%20your%20GitHub%20profile.&descAlignY=65&descSize=18" alt="Git Time Traveler Header">
+</div>
 
-[![Release](https://github.com/chama-x/Git-Timetraveler/actions/workflows/release.yml/badge.svg)](https://github.com/chama-x/Git-Timetraveler/actions/workflows/release.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<div align="center">
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Space+Mono&weight=600&duration=4000&pause=1000&color=909090&width=480&lines=Rust-Powered+%26+Cross-Platform;Interactive+%26+Beautiful+CLI;Backdate+Git+Commits+with+Ease" alt="Typing Animation"/>
+  </a>
+</div>
 
-> **Travel back in time on your GitHub profile!** 
+<div align="center">
+  <p>
+    <a href="https://github.com/chama-x/Git-Timetraveler/actions/workflows/release.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/chama-x/Git-Timetraveler/release.yml?branch=main&style=flat-square&label=Release&logo=github&color=2A2A2A&logoColor=E0E0E0" alt="Release Status Badge">
+    </a>
+    <a href="https://opensource.org/licenses/MIT">
+      <img src="https://img.shields.io/badge/License-MIT-informational?style=flat-square&color=383838&logoColor=E0E0E0" alt="License Badge">
+    </a>
+  </p>
+</div>
 
-Create GitHub repositories with backdated commits to show early years in your contribution graph. This is a modern, cross-platform rewrite of the original [1990-script](https://github.com/antfu/1990-script) in Rust with enhanced features and better UX.
+<div align="center">
+  <p>
+    <img src="https://img.shields.io/badge/Rust-Powered-000000?style=flat-square&logo=rust&logoColor=E0E0E0&color=2A2A2A" alt="Rust Badge">
+    <img src="https://img.shields.io/badge/Windows-Supported-0078D6?style=flat-square&logo=windows&logoColor=E0E0E0&color=2A2A2A" alt="Windows Badge">
+    <img src="https://img.shields.io/badge/macOS-Supported-000000?style=flat-square&logo=apple&logoColor=E0E0E0&color=2A2A2A" alt="macOS Badge">
+    <img src="https://img.shields.io/badge/Linux-Supported-FCC624?style=flat-square&logo=linux&logoColor=E0E0E0&color=2A2A2A" alt="Linux Badge">
+    <img src="https://img.shields.io/badge/npm-Installer-CB3837?style=flat-square&logo=npm&logoColor=E0E0E0&color=383838" alt="NPM Installer Badge">
+  </p>
+</div>
 
-![Demo](https://user-images.githubusercontent.com/placeholder/demo.gif)
+A modern, cross-platform rewrite of the original [1990-script](https://github.com/antfu/1990-script) in **Rust**, designed to create GitHub repositories with backdated commits. Enhance your contribution graph by showing activity in earlier years.
 
-## ✨ Features
+---
 
-- 🦀 **Rust-powered**: Fast, reliable, and memory-safe
-- 🌍 **Cross-platform**: Works on macOS, Windows, and Linux
-- 🎨 **Beautiful CLI**: Interactive prompts with progress bars and colors
-- 📅 **Flexible dates**: Customize year, month, day, and hour
-- 🔒 **Secure**: Uses GitHub personal access tokens
-- 📦 **Easy installation**: Available via npm or direct download
-- 🚀 **Zero dependencies**: Single binary with no runtime requirements
+### Core Features
 
-## 🚀 Quick Start
+* **Rust-powered**: Fast, reliable, and memory-safe performance.
+* **Cross-platform**: Single binary works on macOS, Windows, and Linux.
+* **Interactive CLI**: User-friendly prompts guide you through the process.
+* **Secure**: Uses GitHub personal access tokens for auth and performs all operations locally.
+* **Zero Dependencies**: No runtime requirements needed for the executable.
 
-### Option 1: npx (Recommended)
+---
 
-The easiest way to get started:
+### Installation & Usage
+
+#### Recommended: `npx`
+The easiest way to run the tool without a manual installation.
 
 ```bash
 npx @chamax/git-timetraveler --year 1990
-```
+````
 
-### Option 2: Direct Installation
+#### Manual Installation
 
-Download the binary for your platform from the [releases page](https://github.com/chama-x/Git-Timetraveler/releases).
+Download the appropriate binary for your system from the [**Releases Page**](https://github.com/chama-x/Git-Timetraveler/releases).
 
-### Option 3: Build from Source
+#### Run Interactively
 
-```bash
-git clone https://github.com/chama-x/Git-Timetraveler.git
-cd Git-Timetraveler
-cargo build --release
-./target/release/git-timetraveler --help
-```
-
-## 📖 Usage
-
-### Interactive Mode
-
-Simply run the command and follow the prompts:
+Simply execute the command to be guided by interactive prompts.
 
 ```bash
 git-timetraveler
 ```
 
-### Command Line Flags
+*You will be asked for your GitHub username, a personal access token, and the desired date.*
 
-```bash
-git-timetraveler [OPTIONS]
+-----
 
-Options:
-  -y, --year <YEAR>          Year to travel back to (e.g., 1990) [default: 1990]
-  -u, --username <USERNAME>  GitHub username
-  -t, --token <TOKEN>        GitHub personal access token
-  -m, --month <MONTH>        Month (1-12) [default: 1]
-  -d, --day <DAY>            Day (1-31) [default: 1]
-      --hour <HOUR>          Hour (0-23) [default: 18]
-  -y, --yes                  Skip confirmation prompts
-  -h, --help                 Print help
-  -V, --version              Print version
-```
+### GitHub Setup
 
-### Examples
+1.  **Create a Repository**: On GitHub, create a new, empty repository. The name should ideally match the year (e.g., `1990`).
+2.  **Generate a Token**: Go to `Settings` → `Developer settings` → `Personal access tokens` → `Tokens (classic)`.
+      * Click "Generate new token (classic)".
+      * Grant the `repo` scope (Full control of private repositories).
+      * Copy the generated token to use in the tool.
 
-```bash
-# Basic usage - travel to 1990
-git-timetraveler --year 1990
+-----
 
-# Custom date and time
-git-timetraveler --year 1985 --month 10 --day 26 --hour 9
+### How It Works
 
-# Non-interactive mode
-git-timetraveler --username johndoe --token ghp_xxxx --year 1990 --yes
+The tool automates the `git` process for creating a commit with a specific, historical date.
 
-# Travel to your birth year
-git-timetraveler --year 1995 --month 3 --day 15
-```
+1.  **Clones** your newly created empty repository.
+2.  **Creates** a `README.md` file within the local clone.
+3.  **Commits** the file using a custom author and committer date based on your input.
+      * This is done by setting the `GIT_AUTHOR_DATE` and `GIT_COMMITTER_DATE` environment variables.
+4.  **Pushes** the backdated commit to your GitHub repository.
+5.  **Cleans up** the local directory.
 
-## 🔑 GitHub Setup
+GitHub's contribution graph renders commits based on the *author date*, which is how the historical square appears on your profile.
 
-1. **Create a repository** on GitHub with the year as the name (e.g., `1990`)
-2. **Generate a personal access token**:
-   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Click "Generate new token (classic)"
-   - Select scopes: `repo` (Full control of private repositories)
-   - Copy the generated token
-
-3. **Run the tool** with your credentials
-
-## 🛠️ How It Works
-
-This tool leverages Git's ability to set custom author and committer dates for commits:
-
-1. **Creates a temporary repository** in your specified year directory
-2. **Initializes Git** and creates a README file
-3. **Makes a commit** with the backdated timestamp (e.g., `1990-01-01T18:00:00`)
-4. **Pushes to GitHub** using your personal access token
-5. **Cleans up** the temporary directory
-
-GitHub recognizes the commit timestamp and displays it in your contribution graph for that historical date.
-
-## 🎯 Why Use This?
-
-- **Portfolio enhancement**: Show long-term commitment to coding
-- **Profile aesthetics**: Fill gaps in your contribution graph
-- **Conversation starter**: Unique profile feature
-- **Historical projects**: Backdate the start of long-running projects
-
-## 🔒 Security & Privacy
-
-- Your GitHub token is never stored or logged
-- All operations happen locally except for the final push
-- The tool only creates public repositories with minimal content
-- No personal data is collected or transmitted
-
-## 🚧 Development
-
-### Prerequisites
-
-- Rust 1.70+ 
-- Git
-- GitHub account
-
-### Building
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/git-timetraveler.git
-cd git-timetraveler
-
-# Build in debug mode
-cargo build
-
-# Build optimized release
-cargo build --release
-
-# Run tests
-cargo test
-
-# Run with logging
-RUST_LOG=debug cargo run -- --help
-```
-
-### Project Structure
-
-```
-git-timetraveler/
-├── src/
-│   └── main.rs          # Main CLI application
-├── npm/                 # npm wrapper package
-│   ├── package.json
-│   └── install.js       # Binary download script
-├── .github/workflows/
-│   └── release.yml      # CI/CD pipeline
-├── Cargo.toml           # Rust dependencies
-└── README.md
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Original idea from [@antfu](https://github.com/antfu)'s [1990-script](https://github.com/antfu/1990-script)
-- Built with ❤️ using [Rust](https://rust-lang.org/)
-- CLI powered by [clap](https://github.com/clap-rs/clap)
-- Git operations via [git2](https://github.com/rust-lang/git2-rs)
-
-## ⚠️ Disclaimer
-
-This tool is for educational and portfolio enhancement purposes. Use responsibly and in accordance with GitHub's Terms of Service. The created repositories will be public and visible to others.
-
----
-
-**Happy time traveling! 🕰️✨**
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=120&reversal=true&color=0:1A1A1A,50:2A2A2A,100:383838&animation=fadeIn&section=footer" alt="Minimal Footer">
+</div>
