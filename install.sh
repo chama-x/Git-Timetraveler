@@ -3,9 +3,9 @@
 set -e
 
 # Git Time Traveler Installation Script
-# Usage: curl -fsSL https://raw.githubusercontent.com/yourusername/git-timetraveler/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/chama-x/Git-Timetraveler/main/install.sh | bash
 
-REPO="yourusername/git-timetraveler"
+REPO="chama-x/Git-Timetraveler"
 BINARY_NAME="git-timetraveler"
 INSTALL_DIR="$HOME/.local/bin"
 

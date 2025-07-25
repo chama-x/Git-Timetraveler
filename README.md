@@ -1,6 +1,6 @@
 # 🚀 Git Time Traveler
 
-[![Release](https://github.com/yourusername/git-timetraveler/actions/workflows/release.yml/badge.svg)](https://github.com/yourusername/git-timetraveler/actions/workflows/release.yml)
+[![Release](https://github.com/chama-x/Git-Timetraveler/actions/workflows/release.yml/badge.svg)](https://github.com/chama-x/Git-Timetraveler/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Travel back in time on your GitHub profile!** 
@@ -31,13 +31,13 @@ npx @git-timetraveler/cli --year 1990
 
 ### Option 2: Direct Installation
 
-Download the binary for your platform from the [releases page](https://github.com/yourusername/git-timetraveler/releases).
+Download the binary for your platform from the [releases page](https://github.com/chama-x/Git-Timetraveler/releases).
 
 ### Option 3: Build from Source
 
 ```bash
-git clone https://github.com/yourusername/git-timetraveler.git
-cd git-timetraveler
+git clone https://github.com/chama-x/Git-Timetraveler.git
+cd Git-Timetraveler
 cargo build --release
 ./target/release/git-timetraveler --help
 ```

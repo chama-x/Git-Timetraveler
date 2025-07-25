@@ -3,9 +3,9 @@ name = "git-timetraveler"
 version = "0.1.0"
 edition = "2021"
 description = "Create GitHub repositories with backdated commits to show early years in your profile"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["chama-x <chama-x@users.noreply.github.com>"]
 license = "MIT"
-repository = "https://github.com/yourusername/git-timetraveler"
+repository = "https://github.com/chama-x/Git-Timetraveler"
 keywords = ["git", "github", "cli", "time-travel", "profile"]
 categories = ["command-line-utilities", "development-tools"]
 

@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const GITHUB_REPO = 'yourusername/git-timetraveler';
+const GITHUB_REPO = 'chama-x/Git-Timetraveler';
 const VERSION = require('./package.json').version;
 
 function getPlatformInfo() {

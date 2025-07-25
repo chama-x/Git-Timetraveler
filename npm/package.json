@@ -10,13 +10,13 @@
     "profile",
     "rust"
   ],
-  "homepage": "https://github.com/yourusername/git-timetraveler",
+  "homepage": "https://github.com/chama-x/Git-Timetraveler",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/git-timetraveler.git"
+    "url": "https://github.com/chama-x/Git-Timetraveler.git"
   },
   "license": "MIT",
-  "author": "Your Name <your.email@example.com>",
+  "author": "chama-x <chama-x@users.noreply.github.com>",
   "bin": {
     "git-timetraveler": "./bin/git-timetraveler"
   },
