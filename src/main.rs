@@ -9,6 +9,7 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use ctrlc;
+use std::panic;
 
 /// Create GitHub repositories with backdated commits to show early years in your profile
 #[derive(Parser)]
@@ -94,6 +95,13 @@ impl ProgressCallback for CliProgressBar {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Set a panic hook for user-friendly error reporting
+    panic::set_hook(Box::new(|info| {
+        eprintln!("\n❌ An unexpected error occurred: {}
+If this is a bug, please report it at https://github.com/chama-x/Git-Timetraveler/issues", info);
+        std::process::exit(1);
+    }));
+
     // Handle Ctrl+C gracefully
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
@@ -120,6 +128,8 @@ async fn main() -> Result<()> {
         "Learn about GitHub tokens",
         "Exit",
     ];
+    assert!(!menu_items.is_empty(), "Menu items list must not be empty");
+    assert!(0 < menu_items.len(), "Default index for menu must be valid");
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("What would you like to do?")
         .items(&menu_items)
@@ -190,6 +200,8 @@ async fn main() -> Result<()> {
 
             // Year or range
             let year_mode_items = vec!["Single year", "Range of years"];
+            assert!(!year_mode_items.is_empty(), "Year mode items list must not be empty");
+            assert!(0 < year_mode_items.len(), "Default index for year mode must be valid");
             let year_mode = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Would you like to enter a single year or a range?")
                 .items(&year_mode_items)
@@ -251,9 +263,12 @@ async fn main() -> Result<()> {
                 };
                 let num_years = end - start + 1;
                 if num_years > 10 {
+                    let bulk_items = ["Yes, proceed", "No, cancel"];
+                    assert!(!bulk_items.is_empty(), "Bulk confirm items list must not be empty");
+                    assert!(1 < bulk_items.len(), "Default index for bulk confirm must be valid");
                     let confirm_bulk = Select::with_theme(&ColorfulTheme::default())
                         .with_prompt(&format!("You are about to create commits for {} years. Are you sure you want to proceed?", num_years))
-                        .items(&["Yes, proceed", "No, cancel"])
+                        .items(&bulk_items)
                         .default(1)
                         .interact()? == 0;
                     if !confirm_bulk {
@@ -309,6 +324,8 @@ async fn main() -> Result<()> {
 
             // Force push
             let force_items = vec!["No (safe, recommended)", "Yes (force push, overwrite history)"];
+            assert!(!force_items.is_empty(), "Force items list must not be empty");
+            assert!(0 < force_items.len(), "Default index for force must be valid");
             let force = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Do you want to force push? (use with caution)")
                 .items(&force_items)
@@ -325,6 +342,8 @@ async fn main() -> Result<()> {
             println!("- Force push: {}", if force { "Yes".red() } else { "No".green() });
 
             let confirm_items = vec!["Proceed", "Cancel"];
+            assert!(!confirm_items.is_empty(), "Confirm items list must not be empty");
+            assert!(0 < confirm_items.len(), "Default index for confirm must be valid");
             let confirm = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Do you want to proceed?")
                 .items(&confirm_items)
