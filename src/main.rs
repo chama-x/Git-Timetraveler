@@ -237,7 +237,14 @@ async fn main() -> Result<()> {
                         continue;
                     }
                     match (input_start.trim().parse::<u32>(), input_end.trim().parse::<u32>()) {
-                        (Ok(s), Ok(e)) if s >= 1970 && s <= 2100 && e >= s && e <= 2100 => break (s, e),
+                        (Ok(s), Ok(e)) if s >= 1970 && s <= 2100 && e >= s && e <= 2100 => {
+                            if e < s {
+                                println!("[DEBUG] About to construct invalid range: start={}, end={}", s, e);
+                                println!("Error: End year must be greater than or equal to start year ({}).", s);
+                                process::exit(1);
+                            }
+                            break (s, e)
+                        },
                         (Ok(s), Ok(e)) if e < s => println!("{}", format!("End year must be greater than or equal to start year ({}).", s).red()),
                         _ => println!("{}", "Please enter valid years between 1970 and 2100, and ensure end year >= start year.".red()),
                     }
