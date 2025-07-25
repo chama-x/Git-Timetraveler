@@ -222,7 +222,7 @@ async fn main() -> Result<()> {
                         process::exit(0);
                     }
                     if input_start.trim().is_empty() {
-                        println!("{}", "Start year cannot be empty.".red());
+                        println!("{}", "Start year cannot be empty or whitespace.".red());
                         continue;
                     }
                     let input_end: String = Input::with_theme(&ColorfulTheme::default())
@@ -233,7 +233,7 @@ async fn main() -> Result<()> {
                         process::exit(0);
                     }
                     if input_end.trim().is_empty() {
-                        println!("{}", "End year cannot be empty.".red());
+                        println!("{}", "End year cannot be empty or whitespace.".red());
                         continue;
                     }
                     match (input_start.trim().parse::<u32>(), input_end.trim().parse::<u32>()) {
