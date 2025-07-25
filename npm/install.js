@@ -151,8 +151,8 @@ async function install() {
     console.log('✅ Git Time Traveler installed successfully!');
     console.log('');
     console.log('Usage:');
-    console.log('  npx @git-timetraveler/cli --help');
-    console.log('  npx @git-timetraveler/cli --year 1990');
+    console.log('  npx @chamax/git-timetraveler --help');
+    console.log('  npx @chamax/git-timetraveler --year 1990');
     
   } catch (error) {
     console.error('❌ Installation failed:', error.message);

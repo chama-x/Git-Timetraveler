@@ -34,7 +34,7 @@ jobs:
             
             ### Via npm (recommended)
             ```bash
-            npx @git-timetraveler/cli --year 1990
+            npx @chamax/git-timetraveler --year 1990
             ```
             
             ### Direct download

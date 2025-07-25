@@ -26,7 +26,7 @@ Create GitHub repositories with backdated commits to show early years in your co
 The easiest way to get started:
 
 ```bash
-npx @git-timetraveler/cli --year 1990
+npx @chamax/git-timetraveler --year 1990
 ```
 
 ### Option 2: Direct Installation
