@@ -1,0 +1,96 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      has-releases: ${{ steps.create-release.outputs.has-releases }}
+      release-version: ${{ steps.create-release.outputs.release-version }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/latest/download/installer.sh | sh"
+      - id: create-release
+        run: |
+          cargo dist plan --tag=${{ github.ref_name }} --output-format=json > dist-manifest.json
+          echo "has-releases=$(jq --raw-output ".has_releases" dist-manifest.json)" >> $GITHUB_OUTPUT
+          echo "release-version=$(jq --raw-output ".announcement_tag_is_implicit" dist-manifest.json)" >> $GITHUB_OUTPUT
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        if: ${{ steps.create-release.outputs.has-releases == 'true' }}
+        with:
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## What's Changed
+            
+            * Cross-platform Git Time Traveler CLI
+            * Support for macOS, Windows, and Linux
+            * Interactive prompts with beautiful progress bars
+            * Customizable date/time for commits
+            
+            ## Installation
+            
+            ### Via npm (recommended)
+            ```bash
+            npx @git-timetraveler/cli --year 1990
+            ```
+            
+            ### Direct download
+            Download the appropriate binary for your platform from the assets below.
+            
+            ## Usage
+            ```bash
+            git-timetraveler --help
+            ```
+          draft: false
+          prerelease: false
+
+  upload-artifacts:
+    needs: create-release
+    if: ${{ needs.create-release.outputs.has-releases == 'true' }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: git-timetraveler-x86_64-unknown-linux-gnu.tar.xz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: git-timetraveler-x86_64-pc-windows-msvc.zip
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            name: git-timetraveler-x86_64-apple-darwin.tar.xz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            name: git-timetraveler-aarch64-apple-darwin.tar.xz
+
+    runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install cargo-dist
+        run: "curl --proto '=https' --tlsv1.2 -L -sSf https://github.com/axodotdev/cargo-dist/releases/latest/download/installer.sh | sh"
+      - name: Build artifacts
+        run: |
+          # Actually do a full build
+          cargo dist build --tag=${{ github.ref_name }} --target=${{ matrix.target }} --output-format=json --manifest-path=Cargo.toml
+      - name: Upload artifacts
+        run: |
+          # Upload the artifacts
+          cargo dist upload --tag=${{ github.ref_name }} 

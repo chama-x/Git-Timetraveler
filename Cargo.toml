@@ -9,6 +9,10 @@ repository = "https://github.com/yourusername/git-timetraveler"
 keywords = ["git", "github", "cli", "time-travel", "profile"]
 categories = ["command-line-utilities", "development-tools"]
 
+[lib]
+name = "git_timetraveler"
+path = "src/lib.rs"
+
 [[bin]]
 name = "git-timetraveler"
 path = "src/main.rs"

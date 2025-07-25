@@ -1,0 +1,43 @@
+{
+  "name": "@git-timetraveler/cli",
+  "version": "0.1.0",
+  "description": "Create GitHub repositories with backdated commits to show early years in your profile",
+  "keywords": [
+    "git",
+    "github",
+    "cli",
+    "time-travel",
+    "profile",
+    "rust"
+  ],
+  "homepage": "https://github.com/yourusername/git-timetraveler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/git-timetraveler.git"
+  },
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "bin": {
+    "git-timetraveler": "./bin/git-timetraveler"
+  },
+  "files": [
+    "bin/",
+    "install.js",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+} 

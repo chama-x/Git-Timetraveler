@@ -1,35 +1,195 @@
-# 1990
+# 🚀 Git Time Traveler
 
-Make your GitHub history back to 1990.
+[![Release](https://github.com/yourusername/git-timetraveler/actions/workflows/release.yml/badge.svg)](https://github.com/yourusername/git-timetraveler/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![image](https://user-images.githubusercontent.com/11247099/89427797-38f24f80-d76e-11ea-84fa-ab5642751792.png)
+> **Travel back in time on your GitHub profile!** 
 
-## Travel Back
+Create GitHub repositories with backdated commits to show early years in your contribution graph. This is a modern, cross-platform rewrite of the original [1990-script](https://github.com/antfu/1990-script) in Rust with enhanced features and better UX.
 
-[Create a new repo](https://github.com/new) named `1990` on GitHub.
+![Demo](https://user-images.githubusercontent.com/placeholder/demo.gif)
 
-[Generate a personal access token](https://github.com/settings/tokens/new) on GitHub and copy it.
+## ✨ Features
 
-Run the following script
+- 🦀 **Rust-powered**: Fast, reliable, and memory-safe
+- 🌍 **Cross-platform**: Works on macOS, Windows, and Linux
+- 🎨 **Beautiful CLI**: Interactive prompts with progress bars and colors
+- 📅 **Flexible dates**: Customize year, month, day, and hour
+- 🔒 **Secure**: Uses GitHub personal access tokens
+- 📦 **Easy installation**: Available via npm or direct download
+- 🚀 **Zero dependencies**: Single binary with no runtime requirements
+
+## 🚀 Quick Start
+
+### Option 1: npx (Recommended)
+
+The easiest way to get started:
 
 ```bash
-$ sh -c "$(curl -fsSL https://raw.github.com/antfu/1990-script/master/index.sh)"
+npx @git-timetraveler/cli --year 1990
 ```
 
-Enter you GitHub username and access token and then you are done :)
+### Option 2: Direct Installation
 
-## Explanations
+Download the binary for your platform from the [releases page](https://github.com/yourusername/git-timetraveler/releases).
 
-This project works on the way `git` records commit. Whenever you commit something, `git` puts an `Unix Timestamp` on it to record when you committed it. An [`Unix Timestamp`](https://www.unixtimestamp.com/) is the way computers store the current time. An `Unix timestamp` is a `32-bit` number which stores the number of seconds that has passed from January 1st, 1970 at UTC, the `Unix Epoch`.
+### Option 3: Build from Source
 
-The script firstly creates a directory with the name of the wanted year - `line 9` `mkdir $YEAR`
+```bash
+git clone https://github.com/yourusername/git-timetraveler.git
+cd git-timetraveler
+cargo build --release
+./target/release/git-timetraveler --help
+```
 
-The script then initializes the directory as a git repository, using `git init` - `line 12` `git init`
+## 📖 Usage
 
-The script then stages all the files `git add .` and commits it, using the date `{YEAR}-01-01T18:00:00` (`line 16`) or `6pm, 1st January, 1990` (default of the `YEAR` variable)
+### Interactive Mode
 
-This is the `ISO Date-Time format` for storing time: `YYYY-MM-DDTHH:MM:SS`.
+Simply run the command and follow the prompts:
 
-This commit is then pushed to GitHub (provided you already have made a repository) using `git push -u origin main -f`, and the directory is removed.
+```bash
+git-timetraveler
+```
 
-GitHub recognizes the commit to have been created at `6 pm, 1st January, 1990` and thus registers a contribution at that moment in time. If you scroll to the first year on your profile, you will see there is a single contribution to your `1990` repository, on 1st January.
+### Command Line Flags
+
+```bash
+git-timetraveler [OPTIONS]
+
+Options:
+  -y, --year <YEAR>          Year to travel back to (e.g., 1990) [default: 1990]
+  -u, --username <USERNAME>  GitHub username
+  -t, --token <TOKEN>        GitHub personal access token
+  -m, --month <MONTH>        Month (1-12) [default: 1]
+  -d, --day <DAY>            Day (1-31) [default: 1]
+      --hour <HOUR>          Hour (0-23) [default: 18]
+  -y, --yes                  Skip confirmation prompts
+  -h, --help                 Print help
+  -V, --version              Print version
+```
+
+### Examples
+
+```bash
+# Basic usage - travel to 1990
+git-timetraveler --year 1990
+
+# Custom date and time
+git-timetraveler --year 1985 --month 10 --day 26 --hour 9
+
+# Non-interactive mode
+git-timetraveler --username johndoe --token ghp_xxxx --year 1990 --yes
+
+# Travel to your birth year
+git-timetraveler --year 1995 --month 3 --day 15
+```
+
+## 🔑 GitHub Setup
+
+1. **Create a repository** on GitHub with the year as the name (e.g., `1990`)
+2. **Generate a personal access token**:
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Click "Generate new token (classic)"
+   - Select scopes: `repo` (Full control of private repositories)
+   - Copy the generated token
+
+3. **Run the tool** with your credentials
+
+## 🛠️ How It Works
+
+This tool leverages Git's ability to set custom author and committer dates for commits:
+
+1. **Creates a temporary repository** in your specified year directory
+2. **Initializes Git** and creates a README file
+3. **Makes a commit** with the backdated timestamp (e.g., `1990-01-01T18:00:00`)
+4. **Pushes to GitHub** using your personal access token
+5. **Cleans up** the temporary directory
+
+GitHub recognizes the commit timestamp and displays it in your contribution graph for that historical date.
+
+## 🎯 Why Use This?
+
+- **Portfolio enhancement**: Show long-term commitment to coding
+- **Profile aesthetics**: Fill gaps in your contribution graph
+- **Conversation starter**: Unique profile feature
+- **Historical projects**: Backdate the start of long-running projects
+
+## 🔒 Security & Privacy
+
+- Your GitHub token is never stored or logged
+- All operations happen locally except for the final push
+- The tool only creates public repositories with minimal content
+- No personal data is collected or transmitted
+
+## 🚧 Development
+
+### Prerequisites
+
+- Rust 1.70+ 
+- Git
+- GitHub account
+
+### Building
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/git-timetraveler.git
+cd git-timetraveler
+
+# Build in debug mode
+cargo build
+
+# Build optimized release
+cargo build --release
+
+# Run tests
+cargo test
+
+# Run with logging
+RUST_LOG=debug cargo run -- --help
+```
+
+### Project Structure
+
+```
+git-timetraveler/
+├── src/
+│   └── main.rs          # Main CLI application
+├── npm/                 # npm wrapper package
+│   ├── package.json
+│   └── install.js       # Binary download script
+├── .github/workflows/
+│   └── release.yml      # CI/CD pipeline
+├── Cargo.toml           # Rust dependencies
+└── README.md
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Original idea from [@antfu](https://github.com/antfu)'s [1990-script](https://github.com/antfu/1990-script)
+- Built with ❤️ using [Rust](https://rust-lang.org/)
+- CLI powered by [clap](https://github.com/clap-rs/clap)
+- Git operations via [git2](https://github.com/rust-lang/git2-rs)
+
+## ⚠️ Disclaimer
+
+This tool is for educational and portfolio enhancement purposes. Use responsibly and in accordance with GitHub's Terms of Service. The created repositories will be public and visible to others.
+
+---
+
+**Happy time traveling! 🕰️✨**
