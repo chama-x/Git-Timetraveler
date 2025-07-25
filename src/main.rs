@@ -213,31 +213,25 @@ async fn main() -> Result<()> {
                 (vec![year], year.to_string())
             } else {
                 // Range
-                let start: u32 = loop {
-                    let input: String = Input::with_theme(&ColorfulTheme::default())
+                let (start, end) = loop {
+                    let input_start: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the start year (e.g., 1990)")
                         .interact_text()?;
-                    if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    if input_start.trim().eq_ignore_ascii_case("q") || input_start.trim().eq_ignore_ascii_case("quit") {
                         println!("Exiting. Goodbye!");
                         process::exit(0);
                     }
-                    match input.trim().parse::<u32>() {
-                        Ok(y) if y >= 1970 && y <= 2100 => break y,
-                        _ => println!("{}", "Please enter a valid year between 1970 and 2100.".red()),
-                    }
-                };
-                let end: u32 = loop {
-                    let input: String = Input::with_theme(&ColorfulTheme::default())
+                    let input_end: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the end year (e.g., 1995)")
                         .interact_text()?;
-                    if input.trim().eq_ignore_ascii_case("q") || input.trim().eq_ignore_ascii_case("quit") {
+                    if input_end.trim().eq_ignore_ascii_case("q") || input_end.trim().eq_ignore_ascii_case("quit") {
                         println!("Exiting. Goodbye!");
                         process::exit(0);
                     }
-                    match input.trim().parse::<u32>() {
-                        Ok(y) if y >= start && y <= 2100 => break y,
-                        Ok(y) if y < start => println!("{}", format!("End year must be greater than or equal to start year ({}).", start).red()),
-                        _ => println!("{}", format!("Please enter a valid year between {} and 2100.", start).red()),
+                    match (input_start.trim().parse::<u32>(), input_end.trim().parse::<u32>()) {
+                        (Ok(s), Ok(e)) if s >= 1970 && s <= 2100 && e >= s && e <= 2100 => break (s, e),
+                        (Ok(s), Ok(e)) if e < s => println!("{}", format!("End year must be greater than or equal to start year ({}).", s).red()),
+                        _ => println!("{}", "Please enter valid years between 1970 and 2100, and ensure end year >= start year.".red()),
                     }
                 };
                 let num_years = end - start + 1;
@@ -252,7 +246,7 @@ async fn main() -> Result<()> {
                         process::exit(0);
                     }
                 }
-                ( (start..=end).collect(), format!("{}-{}", start, end) )
+                ((start..=end).collect(), format!("{}-{}", start, end))
             };
 
             let month: u32 = loop {
