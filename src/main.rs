@@ -125,6 +125,14 @@ async fn main() -> Result<()> {
             eprintln!("Example: npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year> ...");
             std::process::exit(1);
         }
+        // Require at least one of --year or --years
+        let year_flag_present = std::env::args().any(|arg| arg == "--year" || arg == "-y");
+        let years_flag_present = std::env::args().any(|arg| arg == "--years");
+        if !year_flag_present && !years_flag_present {
+            eprintln!("❌ You must provide either --year or --years in --no-menu mode.");
+            eprintln!("Example: npx git-timetraveler --no-menu --username <user> --token <token> --repo <repo> --year <year>");
+            std::process::exit(1);
+        }
         // Parse years (single or range)
         let years: Vec<u32> = if let Some(ref years_str) = args.years {
             let parts: Vec<&str> = years_str.split('-').collect();
@@ -142,17 +150,17 @@ async fn main() -> Result<()> {
         println!("\nCreating backdated commit(s) for years: {:?}\n", years);
         for year in years {
             let config = TimeTravelConfig::new(
-                args.username.clone().unwrap(),
-                args.token.clone().unwrap(),
                 year,
                 args.month,
                 args.day,
                 args.hour,
+                args.username.clone().unwrap(),
+                args.token.clone().unwrap(),
                 Some(args.repo.clone().unwrap()),
                 args.branch.clone(),
             )?;
             // Call the actual commit logic
-            if let Err(e) = create_time_traveled_repo(&config, args.force, None) {
+            if let Err(e) = create_time_traveled_repo(&config, None, args.force).await {
                 eprintln!("❌ Error for year {}: {}", year, e);
                 std::process::exit(1);
             }
