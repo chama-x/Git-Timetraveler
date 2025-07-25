@@ -221,12 +221,20 @@ async fn main() -> Result<()> {
                         println!("Exiting. Goodbye!");
                         process::exit(0);
                     }
+                    if input_start.trim().is_empty() {
+                        println!("{}", "Start year cannot be empty.".red());
+                        continue;
+                    }
                     let input_end: String = Input::with_theme(&ColorfulTheme::default())
                         .with_prompt("Enter the end year (e.g., 1995)")
                         .interact_text()?;
                     if input_end.trim().eq_ignore_ascii_case("q") || input_end.trim().eq_ignore_ascii_case("quit") {
                         println!("Exiting. Goodbye!");
                         process::exit(0);
+                    }
+                    if input_end.trim().is_empty() {
+                        println!("{}", "End year cannot be empty.".red());
+                        continue;
                     }
                     match (input_start.trim().parse::<u32>(), input_end.trim().parse::<u32>()) {
                         (Ok(s), Ok(e)) if s >= 1970 && s <= 2100 && e >= s && e <= 2100 => break (s, e),
