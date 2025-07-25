@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use ctrlc;
 use std::panic;
+use atty::Stream;
 
 /// Create GitHub repositories with backdated commits to show early years in your profile
 #[derive(Parser)]
@@ -95,6 +96,12 @@ impl ProgressCallback for CliProgressBar {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // TTY check for interactive menu
+    if !atty::is(Stream::Stdout) || !atty::is(Stream::Stdin) {
+        eprintln!("\n❌ This CLI requires an interactive terminal (TTY).\nPlease run in a supported terminal (e.g., bash, zsh, Terminal.app, iTerm2).\nIf you are using npx or a non-interactive shell, try running directly with 'cargo run' or 'npm run'.");
+        std::process::exit(1);
+    }
+
     // Set a panic hook for user-friendly error reporting
     panic::set_hook(Box::new(|info| {
         eprintln!("\n❌ An unexpected error occurred: {}
