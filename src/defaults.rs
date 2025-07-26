@@ -42,6 +42,8 @@ pub enum AuthorMode {
     CurrentUser(GitIdentity),
     /// Use generic time traveler identity
     TimeTraveler,
+    /// Use manually specified author identity
+    Manual(GitIdentity),
     /// Ask user each time
     AskEachTime,
 }
@@ -333,6 +335,11 @@ impl DefaultsEngine {
                     defaults.reasoning.push("Using time traveler mode from session".to_string());
                     confidence_factors.push(0.8);
                 }
+                "manual" => {
+                    // Manual mode will be handled in interactive prompts
+                    defaults.reasoning.push("Manual author mode from session".to_string());
+                    confidence_factors.push(0.7);
+                }
                 _ => {}
             }
         }
@@ -490,6 +497,7 @@ impl DefaultsEngine {
                     }
                 }
                 "time_traveler" => AuthorMode::TimeTraveler,
+                "manual" => AuthorMode::AskEachTime, // Will be handled in interactive prompts
                 _ => AuthorMode::AskEachTime,
             };
             patterns.push(DetectedPattern::ConsistentAuthor { mode, confidence });
@@ -818,6 +826,9 @@ impl IntelligentDefaults {
             }
             AuthorMode::TimeTraveler => {
                 parts.push("Author: Time Traveler".to_string());
+            }
+            AuthorMode::Manual(identity) => {
+                parts.push(format!("Author: {} <{}> (manual)", identity.name, identity.email));
             }
             AuthorMode::AskEachTime => {
                 parts.push("Author: (will ask)".to_string());

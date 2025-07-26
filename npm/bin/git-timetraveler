@@ -4,14 +4,50 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-// Path to the actual binary
-const binaryPath = path.join(__dirname, '..', 'binary', 'git-timetraveler');
+function getPlatformBinaryName() {
+  return process.platform === 'win32' ? 'git-timetraveler.exe' : 'git-timetraveler';
+}
 
-// Check if binary exists
+// Path to the actual binary
+const binaryName = getPlatformBinaryName();
+const binaryPath = path.join(__dirname, '..', 'binary', binaryName);
+
+// Check if binary exists, if not try to install it
 if (!fs.existsSync(binaryPath)) {
-  console.error('❌ Git Time Traveler binary not found!');
-  console.error('Please ensure you have built the binary and placed it in the correct directory.');
-  process.exit(1);
+  console.log('🔄 Binary not found, attempting to install...');
+  
+  try {
+    const installScript = path.join(__dirname, '..', 'install.js');
+    if (fs.existsSync(installScript)) {
+      const { install } = require(installScript);
+      
+      // Run installation synchronously
+      const { execSync } = require('child_process');
+      execSync(`node "${installScript}"`, { stdio: 'inherit' });
+      
+      // Check if installation was successful
+      if (!fs.existsSync(binaryPath)) {
+        console.error('❌ Installation failed - binary still not found');
+        process.exit(1);
+      }
+    } else {
+      console.error('❌ Git Time Traveler binary not found and install script is missing!');
+      console.error('Please run: npm install git-timetraveler');
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('❌ Failed to install binary:', error.message);
+    process.exit(1);
+  }
+}
+
+// Ensure binary is executable on Unix-like systems
+if (process.platform !== 'win32') {
+  try {
+    fs.chmodSync(binaryPath, '755');
+  } catch (error) {
+    // Ignore chmod errors, binary might already be executable
+  }
 }
 
 // Forward all arguments and stdio to the binary
@@ -27,5 +63,10 @@ child.on('close', (code) => {
 // Handle errors
 child.on('error', (err) => {
   console.error('❌ Failed to execute git-timetraveler:', err.message);
+  console.error('');
+  console.error('Troubleshooting:');
+  console.error('1. Try reinstalling: npm install git-timetraveler');
+  console.error('2. Check if the binary exists:', binaryPath);
+  console.error('3. Verify platform support:', process.platform, process.arch);
   process.exit(1);
 }); 

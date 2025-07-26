@@ -28,12 +28,15 @@ async fn main() -> Result<()> {
         9,                             // hour (9 AM)
         "your-github-username".to_string(),
         "your-github-token".to_string(),
+        Some("back-to-the-future".to_string()), // repo name
+        "main".to_string(),            // branch
+        None,                          // use default time traveler identity
     )?;
 
     println!("🚀 Creating time-traveled repository for {}", config.formatted_date());
     
     let progress = SimpleProgress;
-    create_time_traveled_repo(&config, Some(&progress)).await?;
+    create_time_traveled_repo(&config, Some(&progress), false).await?;
 
     println!("🎉 Repository created successfully!");
     println!("Check your profile: https://github.com/{}", config.username);

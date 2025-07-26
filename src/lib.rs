@@ -1,17 +1,26 @@
 use anyhow::{Context, Result};
 use chrono::DateTime;
-use std::fs;
 use std::path::Path;
-use std::process::Command;
-use tempfile::TempDir;
 
 pub mod git_context;
+pub mod git_operations;
+pub mod github_client;
 pub mod session;
 pub mod defaults;
+pub mod interactive;
+pub mod date_parser;
+pub mod errors;
+pub mod dry_run;
 
 pub use git_context::{GitContext, GitContextDetector, GitIdentity, GitRemote};
+pub use git_operations::{GitOperations, TimeTravelCommitConfig, RepositoryConfig, GitCredentials, CommitResult, RepositoryResult};
+pub use github_client::{GitHubClient, CreateRepositoryRequest, Repository, User, Branch, TokenInfo};
 pub use session::{SessionManager, SessionData, SessionSuggestions, SessionStats, UserPreferences, RecentContext};
 pub use defaults::{DefaultsEngine, IntelligentDefaults, AuthorMode, ContextAnalysis, DetectedPattern};
+pub use interactive::{InteractivePrompts, UserChoices, ValidationResult};
+pub use date_parser::{DateInput, DateParser, TimestampConfig, generate_timestamps};
+pub use errors::{TimeTravelError, AuthError, RepoError, NetworkError, format_error_for_user};
+pub use dry_run::{DryRunExecutor, DryRunConfig, DryRunPlan, display_and_confirm_dry_run};
 
 /// Configuration for creating a time-traveled repository
 #[derive(Debug, Clone)]
@@ -24,6 +33,7 @@ pub struct TimeTravelConfig {
     pub token: String,
     pub repo_name: Option<String>,
     pub branch: String,
+    pub author: Option<GitIdentity>,
 }
 
 impl TimeTravelConfig {
@@ -37,46 +47,40 @@ impl TimeTravelConfig {
         token: String,
         repo_name: Option<String>,
         branch: String,
+        author: Option<GitIdentity>,
     ) -> Result<Self> {
-        // Validate year (reasonable range)
-        if year < 1970 || year > 2030 {
-            anyhow::bail!("Year must be between 1970 and 2030");
-        }
+        use errors::validation::*;
         
-        // Validate month
-        if month < 1 || month > 12 {
-            anyhow::bail!("Month must be between 1 and 12");
-        }
+        // Validate all inputs using the new validation system
+        let validated_year = validate_year(year)
+            .context("Invalid year provided")?;
+        let validated_month = validate_month(month)
+            .context("Invalid month provided")?;
+        let validated_day = validate_day(day)
+            .context("Invalid day provided")?;
+        let validated_hour = validate_hour(hour)
+            .context("Invalid hour provided")?;
+        let validated_username = validate_username(&username)
+            .context("Invalid username provided")?;
+        let validated_token = validate_token(&token)
+            .context("Invalid token provided")?;
         
-        // Validate day
-        if day < 1 || day > 31 {
-            anyhow::bail!("Day must be between 1 and 31");
-        }
-        
-        // Validate hour
-        if hour > 23 {
-            anyhow::bail!("Hour must be between 0 and 23");
-        }
-        
-        // Validate username
-        if username.trim().is_empty() {
-            anyhow::bail!("Username cannot be empty");
-        }
-        
-        // Validate token
-        if token.trim().is_empty() {
-            anyhow::bail!("Token cannot be empty");
+        // Validate repository name if provided
+        if let Some(ref name) = repo_name {
+            errors::validation::validate_repository_name(name)
+                .context("Invalid repository name provided")?;
         }
         
         Ok(Self {
-            year,
-            month,
-            day,
-            hour,
-            username,
-            token,
+            year: validated_year,
+            month: validated_month,
+            day: validated_day,
+            hour: validated_hour,
+            username: validated_username,
+            token: validated_token,
             repo_name,
             branch,
+            author,
         })
     }
 
@@ -119,6 +123,36 @@ pub async fn create_time_traveled_repo(
     progress: Option<&dyn ProgressCallback>,
     force: bool,
 ) -> Result<()> {
+    create_time_traveled_repo_with_options(config, progress, force, false).await
+}
+
+/// Create a time-traveled repository with dry-run support
+pub async fn create_time_traveled_repo_with_options(
+    config: &TimeTravelConfig,
+    progress: Option<&dyn ProgressCallback>,
+    force: bool,
+    dry_run: bool,
+) -> Result<()> {
+    // Handle dry-run mode
+    if dry_run {
+        let dry_run_config = dry_run::DryRunConfig {
+            show_detailed_operations: true,
+            show_file_previews: true,
+            show_risks: true,
+            require_confirmation: false, // Don't require confirmation in dry-run
+            interactive_confirmations: false,
+        };
+        
+        let executor = dry_run::DryRunExecutor::new(dry_run_config);
+        let plan = executor.create_plan(&[config.clone()])?;
+        executor.display_plan(&plan)?;
+        
+        if let Some(p) = progress {
+            p.finish("✅ Dry run complete - no changes made");
+        }
+        return Ok(());
+    }
+
     let report_progress = |msg: &str| {
         if let Some(p) = &progress {
             p.set_message(msg);
@@ -126,40 +160,105 @@ pub async fn create_time_traveled_repo(
         }
     };
 
-    report_progress("Cloning target branch...");
-    let temp_dir = TempDir::new().context("Failed to create temporary directory")?;
-    let repo_path = temp_dir.path().join(&config.repo_name());
-    let remote_url = format!("https://{}:{}@github.com/{}/{}.git", config.username, config.token, config.username, config.repo_name());
-    // Clone the target branch only
-    run_git_command(temp_dir.path(), &["git", "clone", "--branch", &config.branch, "--single-branch", &remote_url, &config.repo_name()])?;
+    // Initialize GitHub client and Git operations
+    let github_client = GitHubClient::new(config.username.clone(), config.token.clone())
+        .context("Failed to create GitHub client")?;
+    let mut git_ops = GitOperations::new();
 
-    // For each year, add a file and commit
+    report_progress("Validating GitHub token...");
+    
+    // Validate token and check permissions
+    github_client.check_permissions().await
+        .context("GitHub token validation failed")?;
+
+    report_progress("Checking repository existence...");
+    
+    // Check if repository exists, create if it doesn't
+    let repo_exists = github_client.repository_exists(&config.repo_name()).await
+        .context("Failed to check repository existence")?;
+
+    if !repo_exists {
+        report_progress("Creating repository on GitHub...");
+        
+        let description = format!("Time travel repository for year {}", config.year);
+        github_client.create_repository_with_defaults(
+            &config.repo_name(),
+            Some(&description),
+            false, // public repository
+        ).await.context("Failed to create repository on GitHub")?;
+        
+        // Wait a moment for repository to be fully initialized
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    }
+
+    report_progress("Cloning repository...");
+    
+    // Set up repository configuration
+    let remote_url = format!("https://github.com/{}/{}.git", config.username, config.repo_name());
+    let repo_config = RepositoryConfig {
+        url: remote_url,
+        branch: config.branch.clone(),
+        local_path: None,
+        credentials: Some(GitCredentials {
+            username: config.username.clone(),
+            token: config.token.clone(),
+        }),
+    };
+
+    // Clone the repository
+    let repo_result = git_ops.clone_repository(&repo_config)
+        .context("Failed to clone repository")?;
+
+    // Open the cloned repository
+    let repo = git_ops.open_repository(&repo_result.repository_path)
+        .context("Failed to open cloned repository")?;
+
+    report_progress("Creating time travel content...");
+    
+    // Create time travel file
     let year_file = format!("timetravel-{}.md", config.year);
-    let file_path = repo_path.join(&year_file);
-    let file_content = format!("# Time Travel Commit for {}\n\nThis file was created to show activity in the year {} on my GitHub profile.\n", config.year, config.year);
-    fs::write(&file_path, file_content).context("Failed to write year file")?;
-
-    report_progress("Staging files...");
-    run_git_command(&repo_path, &["git", "add", &year_file])?;
+    let file_path = Path::new(&year_file);
+    let file_content = git_ops.generate_time_travel_content(config.year, &config.repo_name());
+    
+    git_ops.create_file_with_content(&repo_result.repository_path, file_path, &file_content)
+        .context("Failed to create time travel file")?;
 
     report_progress("Creating backdated commit...");
-    let timestamp = config.commit_timestamp()?;
-    let commit_message = format!("Time travel commit for {}", config.year);
-    run_git_command_with_env(
-        &repo_path,
-        &["git", "commit", "-m", &commit_message],
-        &[
-            ("GIT_AUTHOR_DATE", &timestamp),
-            ("GIT_COMMITTER_DATE", &timestamp),
-            ("GIT_AUTHOR_NAME", "Git Time Traveler"),
-            ("GIT_AUTHOR_EMAIL", "timetraveler@example.com"),
-            ("GIT_COMMITTER_NAME", "Git Time Traveler"),
-            ("GIT_COMMITTER_EMAIL", "timetraveler@example.com"),
-        ],
-    )?;
+    
+    // Parse timestamp for commit
+    let timestamp_str = config.commit_timestamp()?;
+    let timestamp = DateTime::parse_from_rfc3339(&format!("{}Z", timestamp_str))
+        .context("Failed to parse timestamp")?
+        .with_timezone(&chrono::Utc);
+
+    // Set up commit configuration
+    let author = config.author.clone().unwrap_or_else(|| GitIdentity {
+        name: "Git Time Traveler".to_string(),
+        email: "timetraveler@example.com".to_string(),
+    });
+
+    let commit_config = TimeTravelCommitConfig {
+        timestamp,
+        author: author.clone(),
+        committer: author,
+        message: format!("Time travel commit for {}", config.year),
+        files_to_add: vec![file_path.to_path_buf()],
+    };
+
+    // Create the time travel commit
+    let _commit_result = git_ops.create_time_travel_commit(&repo, &commit_config)
+        .context("Failed to create time travel commit")?;
 
     report_progress("Pushing to GitHub...");
-    push_to_github(&repo_path, &config.branch, force)?;
+    
+    // Push to remote
+    let credentials = GitCredentials {
+        username: config.username.clone(),
+        token: config.token.clone(),
+    };
+
+    git_ops.push_to_remote(&repo, "origin", &config.branch, Some(&credentials), force)
+        .context("Failed to push to GitHub")?;
 
     if let Some(p) = progress {
         p.finish("✅ Time travel complete!");
@@ -168,46 +267,7 @@ pub async fn create_time_traveled_repo(
     Ok(())
 }
 
-fn run_git_command(repo_path: &Path, args: &[&str]) -> Result<()> {
-    let output = Command::new(args[0])
-        .current_dir(repo_path)
-        .args(&args[1..])
-        .output()
-        .context("Failed to execute git command")?;
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("Git command failed: {}", stderr);
-    }
-
-    Ok(())
-}
-
-fn run_git_command_with_env(
-    repo_path: &Path,
-    args: &[&str],
-    env_vars: &[(&str, &str)],
-) -> Result<()> {
-    let mut cmd = Command::new(args[0]);
-    cmd.current_dir(repo_path).args(&args[1..]);
-    for (key, value) in env_vars {
-        cmd.env(key, value);
-    }
-    let output = cmd.output().context("Failed to execute git command")?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("Git command failed: {}", stderr);
-    }
-    Ok(())
-}
-
-fn push_to_github(repo_path: &Path, branch: &str, force: bool) -> Result<()> {
-    let mut args = vec!["git", "push", "origin", branch];
-    if force {
-        args.push("--force");
-    }
-    run_git_command(repo_path, &args)
-}
 
 #[cfg(test)]
 mod tests {
@@ -221,7 +281,8 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         );
         assert!(config.is_ok());
 
@@ -231,7 +292,8 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         );
         assert!(config.is_err());
 
@@ -241,7 +303,8 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         );
         assert!(config.is_err());
 
@@ -251,7 +314,8 @@ mod tests {
             "".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         );
         assert!(config.is_err());
     }
@@ -263,7 +327,8 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         ).unwrap();
 
         let timestamp = config.commit_timestamp().unwrap();
@@ -277,7 +342,8 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         ).unwrap();
 
         assert_eq!(config.formatted_date(), "1990-01-01 at 18:00:00");
@@ -290,9 +356,43 @@ mod tests {
             "testuser".to_string(),
             "token123".to_string(),
             Some("testrepo".to_string()),
-            "testbranch".to_string()
+            "testbranch".to_string(),
+            None
         ).unwrap();
 
         assert_eq!(config.repo_name(), "testrepo");
+    }
+
+    #[test]
+    fn test_author_configuration() {
+        // Test with no author (should use default)
+        let config_no_author = TimeTravelConfig::new(
+            1990, 1, 1, 18,
+            "testuser".to_string(),
+            "token123".to_string(),
+            Some("testrepo".to_string()),
+            "testbranch".to_string(),
+            None
+        ).unwrap();
+        assert!(config_no_author.author.is_none());
+
+        // Test with custom author
+        let custom_author = GitIdentity {
+            name: "Custom Author".to_string(),
+            email: "custom@example.com".to_string(),
+        };
+        let config_with_author = TimeTravelConfig::new(
+            1990, 1, 1, 18,
+            "testuser".to_string(),
+            "token123".to_string(),
+            Some("testrepo".to_string()),
+            "testbranch".to_string(),
+            Some(custom_author.clone())
+        ).unwrap();
+        
+        assert!(config_with_author.author.is_some());
+        let author = config_with_author.author.unwrap();
+        assert_eq!(author.name, "Custom Author");
+        assert_eq!(author.email, "custom@example.com");
     }
 } 

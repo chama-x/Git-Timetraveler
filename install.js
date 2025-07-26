@@ -67,7 +67,7 @@ function extractArchive(archivePath, extractDir) {
   const platform = process.platform;
   
   if (platform === 'win32') {
-    // Use PowerShell to extract zip on Windows
+    // Use PowerShell to extract on Windows
     execSync(`powershell -command "Expand-Archive -Path '${archivePath}' -DestinationPath '${extractDir}' -Force"`, { stdio: 'inherit' });
   } else {
     // Use tar for .tar.gz files on Unix-like systems
@@ -160,4 +160,4 @@ if (require.main === module) {
   install();
 }
 
-module.exports = { install }; 
+module.exports = { install };

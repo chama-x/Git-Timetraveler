@@ -1,6 +1,6 @@
 {
   "name": "git-timetraveler",
-  "version": "0.1.28",
+  "version": "1.0.0",
   "description": "Create GitHub repositories with backdated commits to show early years in your profile",
   "keywords": [
     "git",
@@ -26,7 +26,17 @@
     "install.js",
     "README.md"
   ],
-  "scripts": {},
+  "scripts": {
+    "postinstall": "node install.js",
+    "test": "node bin/git-timetraveler --help",
+    "build": "cargo build --release",
+    "build-all": "npm run build-linux && npm run build-macos && npm run build-windows",
+    "build-linux": "cargo build --release --target x86_64-unknown-linux-gnu",
+    "build-macos": "cargo build --release --target x86_64-apple-darwin",
+    "build-macos-arm": "cargo build --release --target aarch64-apple-darwin",
+    "build-windows": "cargo build --release --target x86_64-pc-windows-msvc",
+    "package": "npm run build && npm pack"
+  },
   "engines": {
     "node": ">=14"
   },
