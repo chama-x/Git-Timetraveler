@@ -147,7 +147,7 @@
   - Update version numbers across all package files
   - _Requirements: 1.5_
 
-- [ ] 9.2 Create GitHub release with binaries
+- [x] 9.2 Create GitHub release with binaries
   - Build cross-platform binaries for all supported targets
   - Create GitHub release with proper changelog
   - Upload platform-specific binary assets
