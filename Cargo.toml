@@ -1,6 +1,6 @@
 [package]
 name = "git-timetraveler"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Create GitHub repositories with backdated commits to show early years in your profile"
 authors = ["chama-x <chama-x@users.noreply.github.com>"]

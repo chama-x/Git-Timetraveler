@@ -139,7 +139,7 @@ impl CliProgressBar {
                 .unwrap()
                 .progress_chars("█▉▊▋▌▍▎▏  "),
         );
-        Self { 
+        Self {
             pb,
             multi_progress: None,
             current_step: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
@@ -151,7 +151,7 @@ impl CliProgressBar {
     fn new_multi_year(total_years: usize) -> Self {
         let multi = Arc::new(MultiProgress::new());
         let pb = multi.add(ProgressBar::new((total_years * 6) as u64));
-        
+
         pb.set_style(
             ProgressStyle::default_bar()
                 .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos:>3}/{len:3} {msg}")
@@ -173,7 +173,7 @@ impl CliProgressBar {
             let year_pb = multi.add(ProgressBar::new(6));
             year_pb.set_style(
                 ProgressStyle::default_bar()
-                    .template(&format!("  {} {{spinner:.blue}} [{{elapsed_precise}}] {{bar:30.cyan/blue}} {{pos}}/{{len}} {{msg}}", 
+                    .template(&format!("  {} {{spinner:.blue}} [{{elapsed_precise}}] {{bar:30.cyan/blue}} {{pos}}/{{len}} {{msg}}",
                         format!("Year {}:", year).bright_yellow()))
                     .unwrap()
                     .progress_chars("█▉▊▋▌▍▎▏  "),
@@ -195,11 +195,11 @@ impl CliProgressBar {
         println!("\n{}", "📋 Operation Summary".bright_blue().bold());
         println!("  {} {}", "Repository:".cyan(), repository.bright_green());
         println!("  {} {}", "GitHub User:".cyan(), username.bright_green());
-        
+
         let years_display = if years.len() == 1 {
             years[0].to_string()
         } else {
-            format!("{} years ({}-{})", 
+            format!("{} years ({}-{})",
                 years.len(),
                 years.iter().min().unwrap(),
                 years.iter().max().unwrap()
@@ -214,13 +214,13 @@ impl CliProgressBar {
         println!("\n{}", "🎉 Time Travel Complete!".bright_green().bold());
         let years_count = years.len();
         let years_text = if years_count == 1 { "1".to_string() } else { years_count.to_string() };
-        println!("  {} commits created across {} years", 
+        println!("  {} commits created across {} years",
             years_count.to_string().bright_yellow(),
             years_text.bright_magenta()
         );
         println!("  {} {}", "Repository:".cyan(), repository.bright_green());
-        println!("  {} https://github.com/{}/{}", 
-            "View at:".cyan(), 
+        println!("  {} https://github.com/{}/{}",
+            "View at:".cyan(),
             username.bright_blue(),
             repository.bright_blue().underline()
         );
@@ -237,7 +237,7 @@ impl ProgressCallback for CliProgressBar {
     fn increment(&self) {
         let current = self.current_step.fetch_add(1, Ordering::Relaxed);
         self.pb.inc(1);
-        
+
         // Update the status with current step
         if current < self.total_steps {
             let msg = self.pb.message();
@@ -291,7 +291,7 @@ async fn run_interactive_time_travel() -> Result<()> {
         let config = TimeTravelConfig::new(
             *year,
             1, // Default month
-            1, // Default day  
+            1, // Default day
             choices.hour,
             choices.github_username.clone(),
             choices.github_token.clone(),
@@ -305,7 +305,7 @@ async fn run_interactive_time_travel() -> Result<()> {
     // Show dry run and get confirmation
     let confirmed = display_and_confirm_dry_run(&configs, true)
         .context("Failed to display dry run information")?;
-    
+
     if !confirmed {
         println!("\n{} {}", "❌".red(), "Operation cancelled by user".red());
         return Ok(());
@@ -314,20 +314,20 @@ async fn run_interactive_time_travel() -> Result<()> {
     // Additional confirmation for potentially destructive operations
     if choices.force_push || choices.years.len() > 5 {
         println!("\n{}", "⚠️  Additional Confirmation Required".yellow().bold());
-        
+
         if choices.force_push {
             println!("  {} Force push will overwrite remote history", "•".red());
         }
         if choices.years.len() > 5 {
             println!("  {} Processing {} years may take significant time", "•".yellow(), choices.years.len());
         }
-        
+
         let final_confirm = dialoguer::Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("Are you absolutely sure you want to proceed?")
             .default(false)
             .interact()
             .context("Failed to get final confirmation")?;
-            
+
         if !final_confirm {
             println!("\n{} {}", "❌".red(), "Operation cancelled by user".red());
             return Ok(());
@@ -335,7 +335,7 @@ async fn run_interactive_time_travel() -> Result<()> {
     }
 
     println!("{}", "🚀 Starting time travel operation...".bright_green().bold());
-    
+
     // Process each year with enhanced progress tracking
     for (index, year) in choices.years.iter().enumerate() {
         let year_progress = if choices.years.len() > 1 {
@@ -344,13 +344,13 @@ async fn run_interactive_time_travel() -> Result<()> {
             None
         };
 
-        println!("\n{} {} ({}/{})", 
-            "Processing year:".cyan(), 
+        println!("\n{} {} ({}/{})",
+            "Processing year:".cyan(),
             year.to_string().bright_yellow(),
             (index + 1).to_string().bright_white(),
             choices.years.len().to_string().bright_white()
         );
-        
+
         let config = &configs[index];
 
         // Execute the time travel for this year with appropriate progress callback
@@ -364,21 +364,21 @@ async fn run_interactive_time_travel() -> Result<()> {
             eprintln!("\n{}", format_error_for_user(&e));
             std::process::exit(1);
         }
-        
+
         if let Some(year_pb) = year_progress {
             year_pb.finish_with_message(format!("✅ Year {} complete", year));
         }
-        
-        println!("✅ {} {} {}", 
-            "Commit for year".green(), 
-            year.to_string().bright_yellow(), 
+
+        println!("✅ {} {} {}",
+            "Commit for year".green(),
+            year.to_string().bright_yellow(),
             "created successfully!".green()
         );
     }
 
     // Display completion summary
     progress_bar.display_completion(&choices.years, &choices.repository, &choices.github_username);
-    
+
     Ok(())
 }
 
@@ -398,6 +398,15 @@ impl ProgressCallback for YearProgressWrapper {
 
     fn finish(&self, message: &str) {
         self.pb.finish_with_message(message.to_string());
+    }
+}
+
+/// Clear the terminal screen in a cross-platform way
+fn clear_screen() {
+    if cfg!(target_os = "windows") {
+        let _ = std::process::Command::new("cls").status();
+    } else {
+        let _ = std::process::Command::new("clear").status();
     }
 }
 
@@ -429,18 +438,22 @@ async fn main() -> Result<()> {
         process::exit(0);
     }).expect("Error setting Ctrl-C handler");
 
+    // Clear screen for better presentation
+    clear_screen();
+
     // Enhanced welcome screen with better information
     println!("{}", r#"
-   ____ _ _   _                 _                     _           _           
-  / ___(_) |_| |_ ___ _ __ __ _| |_ ___  ___ ___   __| | ___  ___| |_ ___ _ __ 
- | |  _| | __| __/ _ \ '__/ _` | __/ _ \/ __/ __| / _` |/ _ \/ __| __/ _ \ '__|
- | |_| | | |_| ||  __/ | | (_| | ||  __/\__ \__ \| (_| |  __/ (__| ||  __/ |   
-  \____|_|\__|\__\___|_|  \__,_|\__\___||___/___(_)__,_|\___|\___|\__\___|_|   
+_____ _                  _____                    _
+|_   _(_)_ __ ___   ___  |_   _| __ __ ___   _____| | ___ _ __
+  | | | | '_ ` _ \ / _ \   | || '__/ _` \ \ / / _ \ |/ _ \ '__|
+  | | | | | | | | |  __/   | || | | (_| |\ V /  __/ |  __/ |
+  |_| |_|_| |_| |_|\___|   |_||_|  \__,_| \_/ \___|_|\___|_|
     "#.bright_blue().bold());
-    
+
     println!("{}", "🕰️  Git Time Traveler".bright_blue().bold());
+    println!("{}", "created by CHX".bright_magenta().italic());
     println!("{}", "Create backdated commits to enhance your GitHub contribution graph\n".cyan());
-    
+
     // Display helpful context information
     println!("{}", "What this tool does:".bright_yellow());
     println!("  • {} Create commits with custom timestamps", "✓".green());
@@ -451,12 +464,12 @@ async fn main() -> Result<()> {
 
     let menu_items = vec![
         "🚀 Create backdated commit(s)",
-        "📖 View usage examples", 
+        "📖 View usage examples",
         "🔑 Learn about GitHub tokens",
         "⚙️  Configuration options",
         "❌ Exit",
     ];
-    
+
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("What would you like to do?")
         .items(&menu_items)
@@ -495,30 +508,30 @@ async fn main() -> Result<()> {
 fn display_usage_examples() {
     println!("\n{}", "📖 Usage Examples".bright_blue().bold());
     println!("{}", "Here are common ways to use Git Time Traveler:\n".cyan());
-    
+
     println!("{}", "Interactive Mode (Recommended):".bright_yellow());
     println!("  {}", "git-timetraveler".bright_green());
     println!("  {}", "npx git-timetraveler".bright_green());
     println!("  → Guided prompts with smart defaults\n");
-    
+
     println!("{}", "Non-Interactive Mode:".bright_yellow());
     println!("  {}", "git-timetraveler --no-menu --username myuser --token ghp_xxx --repo myrepo --year 1990".bright_green());
     println!("  {}", "git-timetraveler --no-menu --username myuser --token ghp_xxx --repo myrepo --years 1990-1995".bright_green());
     println!("  → Perfect for scripts and automation\n");
-    
+
     println!("{}", "Common Options:".bright_yellow());
     println!("  {} Create commits for a single year", "--year 1990".bright_cyan());
     println!("  {} Create commits across a range", "--years 1990-1995".bright_cyan());
     println!("  {} Specify custom repository name", "--repo my-project".bright_cyan());
     println!("  {} Set commit time (0-23)", "--hour 14".bright_cyan());
     println!("  {} Force push (use with caution)", "--force".bright_cyan());
-    
+
     println!("\n{}", "💡 Pro Tips:".bright_yellow());
     println!("  • The tool remembers your preferences between sessions");
     println!("  • Use ranges like 1990-1995 for multiple years at once");
     println!("  • Commits are created at 6 PM by default for realistic timing");
     println!("  • Your GitHub token needs 'repo' permissions");
-    
+
     println!("\n{}", "Press Enter to continue...".dimmed());
     let _ = std::io::stdin().read_line(&mut String::new());
 }
@@ -527,7 +540,7 @@ fn display_usage_examples() {
 fn display_github_token_help() {
     println!("\n{}", "🔑 GitHub Personal Access Token Setup".bright_blue().bold());
     println!("{}", "You need a GitHub token to create and push to repositories.\n".cyan());
-    
+
     println!("{}", "Step-by-step instructions:".bright_yellow());
     println!("  {} Go to: {}", "1.".bright_white(), "https://github.com/settings/tokens".bright_blue().underline());
     println!("  {} Click: {}", "2.".bright_white(), "Generate new token (classic)".bright_green());
@@ -535,17 +548,17 @@ fn display_github_token_help() {
     println!("  {} Select scopes: {}", "4.".bright_white(), "Check 'repo' (Full control of private repositories)".bright_green());
     println!("  {} Click: {}", "5.".bright_white(), "Generate token".bright_green());
     println!("  {} Copy the token: {}", "6.".bright_white(), "Save it securely - you won't see it again!".yellow());
-    
+
     println!("\n{}", "Required Permissions:".bright_yellow());
     println!("  {} {} - Create, read, and write repositories", "✓".green(), "repo".bright_cyan());
     println!("  {} {} - Access public repositories (included in repo)", "✓".green(), "public_repo".bright_cyan());
-    
+
     println!("\n{}", "Security Notes:".bright_yellow());
     println!("  • {} Never share your token with others", "⚠️".yellow());
     println!("  • {} Store it securely (password manager recommended)", "🔒".blue());
     println!("  • {} You can revoke it anytime from GitHub settings", "🔄".cyan());
     println!("  • {} This tool stores it locally and never transmits it elsewhere", "🛡️".green());
-    
+
     println!("\n{}", "Press Enter to continue...".dimmed());
     let _ = std::io::stdin().read_line(&mut String::new());
 }
@@ -568,13 +581,13 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
 
     // Parse years from arguments
     let years = parse_years_from_args(&args)?;
-    
+
     // Validate year range
     if years.is_empty() {
         eprintln!("❌ No valid years specified");
         std::process::exit(1);
     }
-    
+
     if years.len() > 50 {
         eprintln!("❌ Too many years specified (maximum 50)");
         std::process::exit(1);
@@ -604,7 +617,7 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
     // Set up output verbosity
     let verbose = args.verbose;
     let quiet = args.quiet;
-    
+
     if verbose && quiet {
         eprintln!("❌ Cannot use both --verbose and --quiet flags");
         std::process::exit(1);
@@ -631,7 +644,7 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
     if args.dry_run {
         let confirmed = display_and_confirm_dry_run(&configs, false)
             .context("Failed to display dry run information")?;
-        
+
         if !confirmed && !args.yes {
             println!("\n{} {}", "❌".red(), "Dry run completed - use --yes to proceed without confirmation".yellow());
         }
@@ -657,14 +670,14 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
     // Show confirmation for potentially destructive operations (unless --yes is used)
     if !args.yes && (args.force || years.len() > 5) {
         println!("\n{}", "⚠️  Confirmation Required".yellow().bold());
-        
+
         if args.force {
             println!("  {} Force push will overwrite remote history", "•".red());
         }
         if years.len() > 5 {
             println!("  {} Processing {} years may take significant time", "•".yellow(), years.len());
         }
-        
+
         println!("\n{}", "Use --yes flag to skip this confirmation or run interactively for more control".cyan());
         println!("{} {}", "❌".red(), "Operation cancelled - confirmation required".red());
         std::process::exit(1);
@@ -673,7 +686,7 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
     if !quiet {
         println!("{}", "🚀 Starting non-interactive time travel operation...".bright_green().bold());
     }
-    
+
     // Process each year
     for (index, year) in years.iter().enumerate() {
         let year_progress = if let Some(ref pb) = progress_bar {
@@ -687,8 +700,8 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
         };
 
         if !quiet {
-            println!("\n{} {} ({}/{})", 
-                "Processing year:".cyan(), 
+            println!("\n{} {} ({}/{})",
+                "Processing year:".cyan(),
                 year.to_string().bright_yellow(),
                 (index + 1).to_string().bright_white(),
                 years.len().to_string().bright_white()
@@ -717,15 +730,15 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
             }
             std::process::exit(1);
         }
-        
+
         if let Some(year_pb) = year_progress {
             year_pb.finish_with_message(format!("✅ Year {} complete", year));
         }
-        
+
         if !quiet {
-            println!("✅ {} {} {}", 
-                "Commit for year".green(), 
-                year.to_string().bright_yellow(), 
+            println!("✅ {} {} {}",
+                "Commit for year".green(),
+                year.to_string().bright_yellow(),
                 "created successfully!".green()
             );
         } else if verbose {
@@ -739,7 +752,7 @@ async fn run_non_interactive_mode(args: Args) -> Result<()> {
     } else if !quiet {
         println!("✅ All {} years processed successfully!", years.len());
     }
-    
+
     Ok(())
 }
 
@@ -751,7 +764,7 @@ fn validate_non_interactive_args(args: &Args) -> Vec<String> {
     if args.username.is_none() {
         errors.push("Missing required argument: --username".to_string());
     }
-    
+
     if args.token.is_none() {
         errors.push("Missing required argument: --token".to_string());
     }
@@ -759,7 +772,7 @@ fn validate_non_interactive_args(args: &Args) -> Vec<String> {
     // Year validation
     let year_flag_present = std::env::args().any(|arg| arg == "--year" || arg == "-y");
     let years_flag_present = std::env::args().any(|arg| arg == "--years");
-    
+
     if !year_flag_present && !years_flag_present {
         errors.push("Must specify either --year or --years".to_string());
     }
@@ -773,7 +786,7 @@ fn validate_non_interactive_args(args: &Args) -> Vec<String> {
     if args.month < 1 || args.month > 12 {
         errors.push(format!("Month {} is invalid (must be 1-12)", args.month));
     }
-    
+
     if args.day < 1 || args.day > 31 {
         errors.push(format!("Day {} is invalid (must be 1-31)", args.day));
     }
@@ -817,7 +830,7 @@ fn parse_years_from_args(args: &Args) -> Result<Vec<u32>> {
 /// Parse years string (handles ranges and lists)
 fn parse_years_string(years_str: &str) -> Result<Vec<u32>> {
     let trimmed = years_str.trim();
-    
+
     // Handle range (e.g., "1990-1995")
     if trimmed.contains('-') && !trimmed.contains(',') {
         let parts: Vec<&str> = trimmed.split('-').collect();
@@ -826,7 +839,7 @@ fn parse_years_string(years_str: &str) -> Result<Vec<u32>> {
                 .context("Invalid start year in range")?;
             let end = parts[1].trim().parse::<u32>()
                 .context("Invalid end year in range")?;
-            
+
             if start > end {
                 anyhow::bail!("Start year must be less than or equal to end year");
             }
@@ -836,11 +849,11 @@ fn parse_years_string(years_str: &str) -> Result<Vec<u32>> {
             if start < 1970 || end > 2030 {
                 anyhow::bail!("Years must be between 1970 and 2030");
             }
-            
+
             return Ok((start..=end).collect());
         }
     }
-    
+
     // Handle comma-separated list (e.g., "1990,1992,1994")
     if trimmed.contains(',') {
         let years: Result<Vec<u32>> = trimmed
@@ -856,14 +869,14 @@ fn parse_years_string(years_str: &str) -> Result<Vec<u32>> {
             .collect();
         return years;
     }
-    
+
     // Handle single year
     let year = trimmed.parse::<u32>()
         .context("Invalid year format")?;
     if year < 1970 || year > 2030 {
         anyhow::bail!("Year must be between 1970 and 2030");
     }
-    
+
     Ok(vec![year])
 }
 
@@ -873,14 +886,14 @@ fn parse_years_string(years_str: &str) -> Result<Vec<u32>> {
 fn display_configuration_options() {
     println!("\n{}", "⚙️  Configuration Options".bright_blue().bold());
     println!("{}", "Git Time Traveler learns from your usage patterns.\n".cyan());
-    
+
     println!("{}", "Stored Preferences:".bright_yellow());
     println!("  • {} Recent repository names", "📁".blue());
     println!("  • {} Preferred author modes", "👤".blue());
     println!("  • {} Common year patterns", "📅".blue());
     println!("  • {} GitHub username", "🐙".blue());
     println!("  • {} Default commit timing", "⏰".blue());
-    
+
     println!("\n{}", "Configuration Location:".bright_yellow());
     if let Some(config_dir) = dirs::config_dir() {
         let config_path = config_dir.join("git-timetraveler");
@@ -888,16 +901,16 @@ fn display_configuration_options() {
     } else {
         println!("  {}", "~/.config/git-timetraveler/".bright_cyan());
     }
-    
+
     println!("\n{}", "Reset Options:".bright_yellow());
     println!("  • Delete the configuration directory to start fresh");
     println!("  • Individual preferences reset automatically after 30 days of inactivity");
     println!("  • GitHub tokens are stored securely using your system keychain");
-    
+
     println!("\n{}", "Command Line Override:".bright_yellow());
     println!("  Use {} to bypass all interactive prompts", "--no-menu".bright_cyan());
     println!("  All preferences can be overridden with command line arguments");
-    
+
     println!("\n{}", "Press Enter to continue...".dimmed());
     let _ = std::io::stdin().read_line(&mut String::new());
 }
