@@ -4,7 +4,7 @@
 
 <div align="center">
   <a href="https://git.io/typing-svg">
-    <img src="https://readme-typing-svg.herokuapp.com?font=Space+Mono&weight=600&duration=4000&pause=1000&color=909090&width=480&lines=Rust-Powered+%26+Cross-Platform;Interactive+%26+Beautiful+CLI;Backdate+Git+Commits+with+Ease" alt="Typing Animation"/>
+    <img src="https://readme-typing-svg.herokuapp.com?font=Space+Mono&weight=600&duration=4000&pause=1000&color=909090&width=480&lines=Rust-Powered+%26+Cross-Platform;Interactive+%26+Beautiful+CLI;Clean+UI+with+Clear+Screen;Backdate+Git+Commits+with+Ease" alt="Typing Animation"/>
   </a>
 </div>
 
@@ -17,6 +17,7 @@
       <img src="https://img.shields.io/badge/License-MIT-informational?style=flat-square&color=383838&logoColor=E0E0E0" alt="License Badge">
     </a>
   </p>
+  <p><strong>🆕 v1.1.0 Released!</strong> - New ASCII art, attribution, and improved UI with clear screen!</p>
 </div>
 
 <div align="center">
